@@ -1,6 +1,7 @@
 // lib/presentation/pages/search_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/app_state_notifier.dart';
 import '../widgets/search/search_bar.dart';
@@ -127,13 +128,21 @@ class SearchPage extends ConsumerWidget {
             (context, index) => SizedBox(height: VerbLabTheme.spacing['md']!),
         itemBuilder: (context, index) {
           final verb = appState.searchResults[index];
-          return VerbCard(
-            verb: verb,
-            onTap: () {
-              ref.read(appStateProvider.notifier).selectVerb(verb.id);
-              // ToDo: Navegar a pantalla de detalle
-              // Navigator.push(...);
-            },
+
+          // Usar Hero para animar la transición entre pantallas
+          return Hero(
+            tag: 'verb-card-${verb.id}',
+            child: Material(
+              // Necesario para que Hero funcione correctamente
+              type: MaterialType.transparency,
+              child: VerbCard(
+                verb: verb,
+                onTap: () {
+                  // Usar el contexto para navegar con GoRouter
+                  context.push('/verb/${verb.id}');
+                },
+              ),
+            ),
           );
         },
       ),
@@ -153,7 +162,9 @@ class SearchPage extends ConsumerWidget {
             Icon(
               Icons.search,
               size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                128,
+              ), // Usando withAlpha en lugar de withOpacity
             ),
             SizedBox(height: VerbLabTheme.spacing['md']),
             Text(
@@ -167,8 +178,9 @@ class SearchPage extends ConsumerWidget {
             Text(
               'Search by base form, past tense or participle',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: 0.7),
+                color: theme.colorScheme.onSurfaceVariant.withAlpha(
+                  179,
+                ), // Usando withAlpha en lugar de withOpacity
               ),
               textAlign: TextAlign.center,
             ),

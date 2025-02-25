@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
 import 'core/themes/app_theme.dart';
-import 'presentation/pages/search_page.dart';
+import 'core/navigation/app_router.dart';
 import 'presentation/widgets/common/error_view.dart';
 
 void main() async {
@@ -34,57 +34,59 @@ void main() async {
 }
 
 /// Widget principal de la aplicación VerbLab
-class VerbLabApp extends ConsumerWidget {
+class VerbLabApp extends ConsumerStatefulWidget {
   const VerbLabApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Intentar cargar los datos iniciales durante la primera construcción
-    _initializeApp(ref);
+  ConsumerState<VerbLabApp> createState() => _VerbLabAppState();
+}
 
+class _VerbLabAppState extends ConsumerState<VerbLabApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Inicializar datos al arrancar la app
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(appStateProvider.notifier).initialize();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = ref.watch(appStateProvider);
+
+    // Si la app está inicializada, mostrar el router
+    if (appState.isInitialized) {
+      final router = ref.watch(routerProvider);
+
+      return MaterialApp.router(
+        title: AppConstants.appName,
+        debugShowCheckedModeBanner: false,
+        theme: VerbLabTheme.lightTheme(),
+        darkTheme: VerbLabTheme.darkTheme(),
+        themeMode: ThemeMode.system,
+        routerConfig: router,
+      );
+    }
+
+    // Mientras se inicializa, mostrar pantalla de splash o error
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: VerbLabTheme.lightTheme(),
       darkTheme: VerbLabTheme.darkTheme(),
-      themeMode: ThemeMode.system, // Seguir la configuración del sistema
-      home: const AppStartupManager(),
+      themeMode: ThemeMode.system,
+      home:
+          appState.hasError
+              ? Scaffold(
+                body: ErrorView(
+                  error: 'Failed to initialize app: ${appState.error}',
+                  onRetry:
+                      () => ref.read(appStateProvider.notifier).initialize(),
+                ),
+              )
+              : const SplashScreen(),
     );
-  }
-
-  void _initializeApp(WidgetRef ref) {
-    // Usar addPostFrameCallback para evitar cambios de estado durante la construcción
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(appStateProvider.notifier).initialize();
-    });
-  }
-}
-
-/// Widget que gestiona la pantalla inicial basada en el estado de inicialización
-class AppStartupManager extends ConsumerWidget {
-  const AppStartupManager({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final appState = ref.watch(appStateProvider);
-
-    // Verificar si hay un error crítico en la inicialización
-    if (appState.hasError) {
-      return Scaffold(
-        body: ErrorView(
-          error: 'Failed to initialize app: ${appState.error}',
-          onRetry: () => ref.read(appStateProvider.notifier).initialize(),
-        ),
-      );
-    }
-
-    // Verificar si la app está inicializada
-    if (appState.isInitialized) {
-      return const SearchPage();
-    }
-
-    // Mostrar pantalla de splash mientras se inicializa
-    return const SplashScreen();
   }
 }
 
