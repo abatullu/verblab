@@ -125,17 +125,7 @@ class CacheFailure extends VerbLabError {
 }
 
 /// Excepciones específicas para lanzar en distintas partes de la aplicación
-class DatabaseException implements Exception {
-  final String message;
-  final dynamic error;
-
-  const DatabaseException(this.message, [this.error]);
-
-  @override
-  String toString() =>
-      'DatabaseException: $message${error != null ? ' ($error)' : ''}';
-}
-
+/// Nota: Renombramos a CustomDatabaseException para evitar conflictos con sqflite
 class TTSException implements Exception {
   final String message;
   final dynamic error;
@@ -149,10 +139,10 @@ class TTSException implements Exception {
 
 /// Utilidad para convertir Exception a Failure
 VerbLabError exceptionToFailure(Exception exception, [StackTrace? stackTrace]) {
-  if (exception is DatabaseException) {
+  if (exception is CustomDatabaseException) {
     return DatabaseFailure(
       message: exception.message,
-      details: exception.error?.toString(),
+      details: exception.originalError?.toString(),
       stackTrace: stackTrace,
       originalError: exception,
     );
@@ -171,4 +161,17 @@ VerbLabError exceptionToFailure(Exception exception, [StackTrace? stackTrace]) {
       originalError: exception,
     );
   }
+}
+
+/// Excepción personalizada para operaciones de base de datos
+/// Esta definición se mueve a database_helper.dart para evitar conflictos circulares
+class CustomDatabaseException implements Exception {
+  final String message;
+  final dynamic originalError;
+
+  const CustomDatabaseException(this.message, [this.originalError]);
+
+  @override
+  String toString() =>
+      'CustomDatabaseException: $message${originalError != null ? ' ($originalError)' : ''}';
 }
