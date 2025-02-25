@@ -3,7 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
+import 'core/providers/app_state_notifier.dart';
 import 'core/themes/app_theme.dart';
+import 'presentation/pages/search_page.dart';
+import 'presentation/widgets/common/error_view.dart';
 
 void main() async {
   // Aseguramos que Flutter esté inicializado
@@ -36,14 +39,52 @@ class VerbLabApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Intentar cargar los datos iniciales durante la primera construcción
+    _initializeApp(ref);
+
     return MaterialApp(
       title: AppConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: VerbLabTheme.lightTheme(),
       darkTheme: VerbLabTheme.darkTheme(),
       themeMode: ThemeMode.system, // Seguir la configuración del sistema
-      home: const SplashScreen(), // Pantalla inicial
+      home: const AppStartupManager(),
     );
+  }
+
+  void _initializeApp(WidgetRef ref) {
+    // Usar addPostFrameCallback para evitar cambios de estado durante la construcción
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(appStateProvider.notifier).initialize();
+    });
+  }
+}
+
+/// Widget que gestiona la pantalla inicial basada en el estado de inicialización
+class AppStartupManager extends ConsumerWidget {
+  const AppStartupManager({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appState = ref.watch(appStateProvider);
+
+    // Verificar si hay un error crítico en la inicialización
+    if (appState.hasError) {
+      return Scaffold(
+        body: ErrorView(
+          error: 'Failed to initialize app: ${appState.error}',
+          onRetry: () => ref.read(appStateProvider.notifier).initialize(),
+        ),
+      );
+    }
+
+    // Verificar si la app está inicializada
+    if (appState.isInitialized) {
+      return const SearchPage();
+    }
+
+    // Mostrar pantalla de splash mientras se inicializa
+    return const SplashScreen();
   }
 }
 
