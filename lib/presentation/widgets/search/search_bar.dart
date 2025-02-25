@@ -169,7 +169,8 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.7),
                   ),
                 ),
                 style: theme.textTheme.bodyLarge,

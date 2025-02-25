@@ -47,8 +47,8 @@ class VerbCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        splashColor: theme.colorScheme.primary.withOpacity(0.1),
-        highlightColor: theme.colorScheme.primary.withOpacity(0.05),
+        splashColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+        highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
         child: Padding(
           padding: EdgeInsets.all(
             compact ? VerbLabTheme.spacing['md']! : VerbLabTheme.spacing['lg']!,
@@ -175,10 +175,10 @@ class VerbCard extends ConsumerWidget {
         vertical: VerbLabTheme.spacing['xs']!,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withOpacity(0.3),
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
           width: 1,
         ),
       ),

@@ -153,7 +153,7 @@ class SearchPage extends ConsumerWidget {
             Icon(
               Icons.search,
               size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             SizedBox(height: VerbLabTheme.spacing['md']),
             Text(
@@ -167,7 +167,8 @@ class SearchPage extends ConsumerWidget {
             Text(
               'Search by base form, past tense or participle',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: 0.7),
               ),
               textAlign: TextAlign.center,
             ),

@@ -47,7 +47,7 @@ class ErrorView extends StatelessWidget {
         vertical: VerbLabTheme.spacing['sm']!,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.errorContainer.withOpacity(0.1),
+        color: theme.colorScheme.errorContainer.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['md']!),
         border: Border.all(color: theme.colorScheme.errorContainer, width: 1),
       ),

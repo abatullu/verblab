@@ -85,10 +85,10 @@ class _ShimmerLoadingState extends State<ShimmerLoading>
     final theme = Theme.of(context);
     final baseColor =
         widget.baseColor ??
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.1);
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.1);
     final highlightColor =
         widget.highlightColor ??
-        theme.colorScheme.surfaceContainerHighest.withOpacity(0.3);
+        theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3);
 
     return AnimatedBuilder(
       animation: _shimmerAnimation,
