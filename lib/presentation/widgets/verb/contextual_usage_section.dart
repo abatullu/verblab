@@ -95,10 +95,10 @@ class ContextualUsageSection extends StatelessWidget {
               vertical: VerbLabTheme.spacing['xs']!,
             ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withOpacity(0.1),
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),

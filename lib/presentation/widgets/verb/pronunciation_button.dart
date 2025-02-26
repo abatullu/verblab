@@ -76,8 +76,8 @@ class PronunciationButton extends ConsumerWidget {
           shape: const CircleBorder(),
           child: InkWell(
             onTap: isEnabled ? () => _handleTap(ref) : null,
-            hoverColor: theme.colorScheme.primary.withOpacity(0.1),
-            splashColor: theme.colorScheme.primary.withOpacity(0.2),
+            hoverColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
             child: AnimatedScale(
               scale: state == TTSState.playing ? 1.1 : 1.0,
               duration: VerbLabTheme.quick,
@@ -114,14 +114,14 @@ class PronunciationButton extends ConsumerWidget {
 
     switch (state) {
       case TTSState.playing:
-        return theme.colorScheme.primary.withOpacity(0.15);
+        return theme.colorScheme.primary.withValues(alpha: 0.15);
       case TTSState.loading:
-        return theme.colorScheme.primary.withOpacity(0.05);
+        return theme.colorScheme.primary.withValues(alpha: 0.05);
       case TTSState.error:
-        return theme.colorScheme.error.withOpacity(0.1);
+        return theme.colorScheme.error.withValues(alpha: 0.1);
       case TTSState.idle:
       default:
-        return theme.colorScheme.primary.withOpacity(0.05);
+        return theme.colorScheme.primary.withValues(alpha: 0.05);
     }
   }
 
@@ -129,13 +129,13 @@ class PronunciationButton extends ConsumerWidget {
   Color _getBorderColor(TTSState state, ThemeData theme) {
     switch (state) {
       case TTSState.playing:
-        return theme.colorScheme.primary.withOpacity(0.3);
+        return theme.colorScheme.primary.withValues(alpha: 0.3);
       case TTSState.error:
-        return theme.colorScheme.error.withOpacity(0.3);
+        return theme.colorScheme.error.withValues(alpha: 0.3);
       case TTSState.idle:
       case TTSState.loading:
       default:
-        return theme.colorScheme.primary.withOpacity(0.1);
+        return theme.colorScheme.primary.withValues(alpha: 0.1);
     }
   }
 
