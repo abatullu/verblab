@@ -6,7 +6,7 @@ import '../../core/themes/app_theme.dart';
 import '../../core/providers/app_state_notifier.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
-import '../widgets/verb/pronunciation_button.dart';
+import '../widgets/verb/verb_forms.dart';
 
 /// Página de detalle que muestra toda la información de un verbo.
 ///
@@ -86,7 +86,7 @@ class VerbDetailPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tarjeta de conjugación
+            // Tarjeta de conjugación con el nuevo componente VerbForms
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -135,25 +135,12 @@ class VerbDetailPage extends ConsumerWidget {
                       ],
                     ),
                     SizedBox(height: VerbLabTheme.spacing['md']),
-                    _buildVerbFormRow(
-                      context,
-                      'Base form:',
-                      selectedVerb.base,
-                      'base',
-                    ),
-                    SizedBox(height: VerbLabTheme.spacing['md']),
-                    _buildVerbFormRow(
-                      context,
-                      'Past tense:',
-                      selectedVerb.getPast(currentDialect),
-                      'past',
-                    ),
-                    SizedBox(height: VerbLabTheme.spacing['md']),
-                    _buildVerbFormRow(
-                      context,
-                      'Past participle:',
-                      selectedVerb.getParticiple(currentDialect),
-                      'participle',
+
+                    // Nuevo componente de formas verbales
+                    VerbForms(
+                      verb: selectedVerb,
+                      compact: false,
+                      style: VerbFormsStyle.card,
                     ),
                   ],
                 ),
@@ -331,46 +318,6 @@ class VerbDetailPage extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-
-  /// Construye una fila para mostrar una forma verbal con botón de pronunciación
-  Widget _buildVerbFormRow(
-    BuildContext context,
-    String label,
-    String form,
-    String tense,
-  ) {
-    final theme = Theme.of(context);
-
-    return Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-        Expanded(
-          flex: 5,
-          child: Text(
-            form,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        // Botón de pronunciación
-        PronunciationButton(
-          verbId: verbId,
-          tense: tense,
-          size: 42,
-          withBackground: true,
-        ),
-      ],
     );
   }
 

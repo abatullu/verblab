@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/themes/app_theme.dart';
 import '../../../domain/entities/verb.dart';
 import '../../../core/providers/app_state_notifier.dart';
+import 'verb_forms.dart';
 
 /// Tarjeta que muestra la información básica de un verbo.
 ///
@@ -32,10 +33,6 @@ class VerbCard extends ConsumerWidget {
     final theme = Theme.of(context);
     final appState = ref.watch(appStateProvider);
     final currentDialect = appState.currentDialect;
-
-    // Determinar las formas verbales según el dialecto seleccionado
-    final past = verb.getPast(currentDialect);
-    final participle = verb.getParticiple(currentDialect);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -90,15 +87,11 @@ class VerbCard extends ConsumerWidget {
                         : VerbLabTheme.spacing['md'],
               ),
 
-              // Formas verbales secundarias
-              Wrap(
-                spacing: VerbLabTheme.spacing['md']!,
-                runSpacing: VerbLabTheme.spacing['xs']!,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  _buildVerbForm(theme, 'Past', past, compact),
-                  _buildVerbForm(theme, 'Participle', participle, compact),
-                ],
+              // Componente de formas verbales
+              VerbForms(
+                verb: verb,
+                compact: compact,
+                style: VerbFormsStyle.flat, // Estilo plano para tarjetas
               ),
 
               if (!compact) ...[
@@ -127,40 +120,6 @@ class VerbCard extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  /// Construye un widget para mostrar una forma verbal específica
-  Widget _buildVerbForm(
-    ThemeData theme,
-    String label,
-    String form,
-    bool compact,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Etiqueta (PAST, PARTICIPLE, etc.)
-        Text(
-          label.toUpperCase(),
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.5,
-          ),
-        ),
-        SizedBox(height: VerbLabTheme.spacing['xs']! / 2),
-
-        // Valor de la forma verbal
-        Text(
-          form,
-          style: (compact
-                  ? theme.textTheme.titleMedium
-                  : theme.textTheme.titleLarge)
-              ?.copyWith(fontWeight: FontWeight.w600),
-        ),
-      ],
     );
   }
 
