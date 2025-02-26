@@ -124,7 +124,7 @@ class VerbForms extends ConsumerWidget {
     return TTSState.idle;
   }
 
-  /// Construye una fila para una forma verbal
+  /// Construye una fila para una forma verbal con mejor espaciado y alineación
   Widget _buildVerbFormRow(
     BuildContext context, {
     required String label,
@@ -135,13 +135,15 @@ class VerbForms extends ConsumerWidget {
     required bool isLast,
   }) {
     final theme = Theme.of(context);
-    final spacing =
+    final verticalSpacing =
+        compact ? VerbLabTheme.spacing['xs']! : VerbLabTheme.spacing['sm']!;
+    final horizontalSpacing =
         compact ? VerbLabTheme.spacing['xs']! : VerbLabTheme.spacing['sm']!;
 
     return Padding(
       padding: EdgeInsets.only(
-        top: isFirst ? 0 : spacing,
-        bottom: isLast ? 0 : spacing,
+        top: isFirst ? 0 : verticalSpacing,
+        bottom: isLast ? 0 : verticalSpacing,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -151,49 +153,79 @@ class VerbForms extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Etiqueta (BASE, PAST, etc.)
-                Text(
-                  label,
-                  style: (compact
-                          ? theme.textTheme.labelSmall
-                          : theme.textTheme.labelMedium)
-                      ?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w500,
-                      ),
+                // Etiqueta (BASE, PAST, etc.) con mejor contraste
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalSpacing,
+                    vertical: VerbLabTheme.spacing['xs']! / 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(
+                      VerbLabTheme.radius['xs']!,
+                    ),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant,
+                      width: 1,
+                    ),
+                  ),
+                  child: Text(
+                    label,
+                    style: (compact
+                            ? theme.textTheme.labelSmall
+                            : theme.textTheme.labelMedium)
+                        ?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                  ),
                 ),
-                SizedBox(height: spacing / 2),
+                SizedBox(height: verticalSpacing),
 
-                // Valor de la forma verbal
-                Text(
-                  form,
-                  style: (compact
-                          ? theme.textTheme.titleMedium
-                          : theme.textTheme.titleLarge)
-                      ?.copyWith(fontWeight: FontWeight.w600),
+                // Valor de la forma verbal con mejor tipografía y espaciado
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalSpacing),
+                  child: Text(
+                    form,
+                    style: (compact
+                            ? theme.textTheme.titleMedium
+                            : theme.textTheme.titleLarge)
+                        ?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.3,
+                          height: 1.2,
+                        ),
+                  ),
                 ),
               ],
             ),
           ),
+
+          // Espacio para separar el texto y el botón
+          SizedBox(width: VerbLabTheme.spacing['xs']),
 
           // Botón de pronunciación
           PronunciationButton(
             verbId: verb.id,
             tense: tense,
             size: compact ? 36 : 42,
-            withBackground: style != VerbFormsStyle.flat,
+            withBackground: true,
           ),
         ],
       ),
     );
   }
 
-  /// Construye un divisor entre formas verbales
+  /// Construye un divisor entre formas verbales con mejor estilo
   Widget _buildDivider(ThemeData theme) {
-    return Divider(
-      height: VerbLabTheme.spacing['md']! * 2,
-      thickness: 1,
-      color: theme.colorScheme.outlineVariant,
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: VerbLabTheme.spacing['sm']!),
+      child: Divider(
+        height: 1,
+        thickness: 1,
+        color: theme.colorScheme.outlineVariant,
+      ),
     );
   }
 }

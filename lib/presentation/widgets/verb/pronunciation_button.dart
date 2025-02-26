@@ -57,26 +57,86 @@ class PronunciationButton extends ConsumerWidget {
 
     return Tooltip(
       message: tooltipText,
-      child: InkWell(
-        onTap: isEnabled ? () => _handleTap(ref) : null,
-        borderRadius: BorderRadius.circular(VerbLabTheme.radius['full'] ?? 50),
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color:
-                withBackground
-                    ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-                    : Colors.transparent,
-          ),
-          child: AnimatedSwitcher(
-            duration: VerbLabTheme.quick,
-            child: _buildIcon(state, theme),
+      child: AnimatedContainer(
+        duration: VerbLabTheme.quick,
+        curve: Curves.easeOutCubic,
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: _getBackgroundColor(state, theme, withBackground),
+          border:
+              withBackground
+                  ? Border.all(color: _getBorderColor(state, theme), width: 1)
+                  : null,
+        ),
+        child: Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.antiAlias,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: isEnabled ? () => _handleTap(ref) : null,
+            hoverColor: theme.colorScheme.primary.withOpacity(0.1),
+            splashColor: theme.colorScheme.primary.withOpacity(0.2),
+            child: AnimatedScale(
+              scale: state == TTSState.playing ? 1.1 : 1.0,
+              duration: VerbLabTheme.quick,
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: VerbLabTheme.quick,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: ScaleTransition(scale: animation, child: child),
+                    );
+                  },
+                  child: _buildIcon(state, theme),
+                ),
+              ),
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// Obtiene el color de fondo según el estado
+  Color _getBackgroundColor(
+    TTSState state,
+    ThemeData theme,
+    bool withBackground,
+  ) {
+    if (!withBackground) {
+      return Colors.transparent;
+    }
+
+    switch (state) {
+      case TTSState.playing:
+        return theme.colorScheme.primary.withOpacity(0.15);
+      case TTSState.loading:
+        return theme.colorScheme.primary.withOpacity(0.05);
+      case TTSState.error:
+        return theme.colorScheme.error.withOpacity(0.1);
+      case TTSState.idle:
+      default:
+        return theme.colorScheme.primary.withOpacity(0.05);
+    }
+  }
+
+  /// Obtiene el color del borde según el estado
+  Color _getBorderColor(TTSState state, ThemeData theme) {
+    switch (state) {
+      case TTSState.playing:
+        return theme.colorScheme.primary.withOpacity(0.3);
+      case TTSState.error:
+        return theme.colorScheme.error.withOpacity(0.3);
+      case TTSState.idle:
+      case TTSState.loading:
+      default:
+        return theme.colorScheme.primary.withOpacity(0.1);
+    }
   }
 
   /// Maneja el tap en el botón

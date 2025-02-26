@@ -49,11 +49,12 @@ class ContextualUsageSection extends StatelessWidget {
               title,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
+                letterSpacing: -0.2,
               ),
             ),
             SizedBox(height: VerbLabTheme.spacing['md']),
 
-            // Mostrar todos los usos contextuales
+            // Mostrar todos los usos contextuales con mejor espaciado
             ...usageEntries.map(
               (entry) => _buildUsageItem(context, entry, examples),
             ),
@@ -63,7 +64,7 @@ class ContextualUsageSection extends StatelessWidget {
     );
   }
 
-  /// Construye un elemento de uso contextual
+  /// Construye un elemento de uso contextual mejorado
   Widget _buildUsageItem(
     BuildContext context,
     MapEntry<String, String> entry,
@@ -83,42 +84,57 @@ class ContextualUsageSection extends StatelessWidget {
     }
 
     return Padding(
-      padding: EdgeInsets.only(bottom: VerbLabTheme.spacing['md']!),
+      padding: EdgeInsets.only(bottom: VerbLabTheme.spacing['lg']!),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Etiqueta de contexto
+          // Etiqueta de contexto mejorada con mejor contraste
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: VerbLabTheme.spacing['sm']!,
               vertical: VerbLabTheme.spacing['xs']!,
             ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(VerbLabTheme.radius['xs']!),
+              color: theme.colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.2),
+                width: 1,
+              ),
             ),
             child: Text(
               contextKey,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.primary,
                 fontWeight: FontWeight.w600,
+                letterSpacing: 0.1,
               ),
             ),
           ),
-          SizedBox(height: VerbLabTheme.spacing['xs']),
+          SizedBox(height: VerbLabTheme.spacing['sm']),
 
-          // Descripción
-          Text(description, style: theme.textTheme.bodyMedium),
+          // Descripción con mejor tipografía
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.5,
+              letterSpacing: 0.15,
+            ),
+          ),
 
-          // Ejemplo (si existe)
+          // Ejemplo mejorado (si existe)
           if (relevantExample != null) ...[
-            SizedBox(height: VerbLabTheme.spacing['sm']),
+            SizedBox(height: VerbLabTheme.spacing['md']),
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(VerbLabTheme.spacing['sm']!),
+              padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(VerbLabTheme.radius['xs']!),
+                borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant,
+                  width: 1,
+                ),
               ),
               child: RichText(
                 text: _buildFormattedExample(relevantExample, verbForms, theme),
@@ -130,7 +146,7 @@ class ContextualUsageSection extends StatelessWidget {
     );
   }
 
-  /// Resalta las formas verbales en un ejemplo
+  /// Resalta las formas verbales en un ejemplo con mejor contraste
   TextSpan _buildFormattedExample(
     String example,
     List<String> verbForms,
@@ -161,6 +177,7 @@ class ContextualUsageSection extends StatelessWidget {
                 style: theme.textTheme.bodySmall?.copyWith(
                   fontStyle: FontStyle.italic,
                   color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.5,
                 ),
               ),
             );
@@ -174,6 +191,7 @@ class ContextualUsageSection extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
                 fontStyle: FontStyle.italic,
+                height: 1.5,
               ),
             ),
           );
@@ -193,6 +211,7 @@ class ContextualUsageSection extends StatelessWidget {
             style: theme.textTheme.bodySmall?.copyWith(
               fontStyle: FontStyle.italic,
               color: theme.colorScheme.onSurfaceVariant,
+              height: 1.5,
             ),
           ),
         );
