@@ -8,6 +8,7 @@ import '../widgets/search/search_bar.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_card.dart';
+import '../widgets/common/theme_toggle.dart';
 
 /// Pantalla principal de búsqueda de verbos.
 ///
@@ -27,18 +28,26 @@ class SearchPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header Section con título y barra de búsqueda
+            // Header Section con título, barra de búsqueda y selector de tema
             Padding(
               padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'VerbLab',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  // Fila con título y selector de tema
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'VerbLab',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      // Selector de tema
+                      const ThemeToggle(),
+                    ],
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -152,6 +161,9 @@ class SearchPage extends ConsumerWidget {
   /// Construye el estado vacío (sin búsqueda)
   Widget _buildEmptyState(BuildContext context) {
     final theme = Theme.of(context);
+    // Detectar si estamos en modo oscuro para ajustar la opacidad
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final iconOpacity = isDarkMode ? 0.7 : 0.5;
 
     return Center(
       child: Padding(
@@ -162,9 +174,9 @@ class SearchPage extends ConsumerWidget {
             Icon(
               Icons.search,
               size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                128,
-              ), // Usando withAlpha en lugar de withOpacity
+              color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                iconOpacity,
+              ),
             ),
             SizedBox(height: VerbLabTheme.spacing['md']),
             Text(
@@ -178,9 +190,9 @@ class SearchPage extends ConsumerWidget {
             Text(
               'Search by base form, past tense or participle',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withAlpha(
-                  179,
-                ), // Usando withAlpha en lugar de withOpacity
+                color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                  isDarkMode ? 0.6 : 0.7,
+                ),
               ),
               textAlign: TextAlign.center,
             ),

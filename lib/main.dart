@@ -4,9 +4,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
+import 'core/providers/theme_provider.dart';
 import 'core/themes/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'presentation/widgets/common/error_view.dart';
+import 'presentation/widgets/common/theme_toggle.dart';
 
 void main() async {
   // Aseguramos que Flutter esté inicializado
@@ -18,7 +20,7 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Configuramos el estilo de la barra de estado
+  // Configuramos el estilo de la barra de estado (será actualizado dinámicamente)
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -26,6 +28,9 @@ void main() async {
       statusBarBrightness: Brightness.light,
     ),
   );
+
+  // Inicializamos SharedPreferences para el tema (depende de la implementación completa)
+  // final prefs = await SharedPreferences.getInstance();
 
   runApp(
     // Envolvemos la app con ProviderScope para habilitar Riverpod
@@ -54,6 +59,10 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
   @override
   Widget build(BuildContext context) {
     final appState = ref.watch(appStateProvider);
+    final themeMode = ref.watch(themeModeProvider);
+
+    // Actualizar la UI según el tema seleccionado
+    _updateSystemUI(themeMode == ThemeMode.dark);
 
     // Si la app está inicializada, mostrar el router
     if (appState.isInitialized) {
@@ -64,7 +73,7 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
         debugShowCheckedModeBanner: false,
         theme: VerbLabTheme.lightTheme(),
         darkTheme: VerbLabTheme.darkTheme(),
-        themeMode: ThemeMode.system,
+        themeMode: themeMode,
         routerConfig: router,
       );
     }
@@ -75,7 +84,7 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
       debugShowCheckedModeBanner: false,
       theme: VerbLabTheme.lightTheme(),
       darkTheme: VerbLabTheme.darkTheme(),
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       home:
           appState.hasError
               ? Scaffold(
@@ -88,19 +97,41 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
               : const SplashScreen(),
     );
   }
+
+  /// Actualiza la UI del sistema según el tema seleccionado
+  void _updateSystemUI(bool isDarkMode) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        // Invertir el brillo de los iconos según el tema
+        statusBarIconBrightness:
+            isDarkMode ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDarkMode ? Brightness.dark : Brightness.light,
+      ),
+    );
+  }
 }
 
 /// Pantalla de splash inicial
 ///
 /// Esta pantalla se muestra mientras se inicializan los recursos
 /// necesarios para la aplicación
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: theme.colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: const [
+          Padding(padding: EdgeInsets.only(right: 8.0), child: ThemeToggle()),
+        ],
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -108,8 +139,8 @@ class SplashScreen extends StatelessWidget {
             // Título de la aplicación con estilo premium
             Text(
               AppConstants.appName,
-              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+              style: theme.textTheme.headlineLarge?.copyWith(
+                color: theme.colorScheme.primary,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -118,8 +149,8 @@ class SplashScreen extends StatelessWidget {
             // Subtítulo descriptivo
             Text(
               'The definitive irregular verbs app',
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 48),
@@ -127,7 +158,7 @@ class SplashScreen extends StatelessWidget {
             // Indicador de carga
             CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                Theme.of(context).colorScheme.primary,
+                theme.colorScheme.primary,
               ),
             ),
           ],

@@ -9,7 +9,8 @@ import '../../../core/providers/app_state_notifier.dart';
 /// Botón para reproducir la pronunciación de una forma verbal.
 ///
 /// Este botón muestra diferentes estados visuales según si está
-/// reproduciendo audio, cargando o en estado de error.
+/// reproduciendo audio, cargando o en estado de error. Optimizado para
+/// soportar tema claro y oscuro.
 class PronunciationButton extends ConsumerWidget {
   /// ID del verbo a pronunciar
   final String verbId;
@@ -40,6 +41,9 @@ class PronunciationButton extends ConsumerWidget {
     final theme = Theme.of(context);
     final appState = ref.watch(appStateProvider);
 
+    // Detectar si estamos en modo oscuro
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     // Determinar el estado actual de reproducción
     TTSState state = TTSState.idle;
     if (appState.playingStates.containsKey(verbId) &&
@@ -64,10 +68,13 @@ class PronunciationButton extends ConsumerWidget {
         height: size,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: _getBackgroundColor(state, theme, withBackground),
+          color: _getBackgroundColor(state, theme, withBackground, isDarkMode),
           border:
               withBackground
-                  ? Border.all(color: _getBorderColor(state, theme), width: 1)
+                  ? Border.all(
+                    color: _getBorderColor(state, theme, isDarkMode),
+                    width: 1,
+                  )
                   : null,
         ),
         child: Material(
@@ -76,8 +83,13 @@ class PronunciationButton extends ConsumerWidget {
           shape: const CircleBorder(),
           child: InkWell(
             onTap: isEnabled ? () => _handleTap(ref) : null,
-            hoverColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-            splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+            // Colores adaptativos según el tema
+            hoverColor: theme.colorScheme.primary.withOpacity(
+              isDarkMode ? 0.2 : 0.1,
+            ),
+            splashColor: theme.colorScheme.primary.withOpacity(
+              isDarkMode ? 0.3 : 0.2,
+            ),
             child: AnimatedScale(
               scale: state == TTSState.playing ? 1.1 : 1.0,
               duration: VerbLabTheme.quick,
@@ -102,11 +114,12 @@ class PronunciationButton extends ConsumerWidget {
     );
   }
 
-  /// Obtiene el color de fondo según el estado
+  /// Obtiene el color de fondo según el estado y el tema
   Color _getBackgroundColor(
     TTSState state,
     ThemeData theme,
     bool withBackground,
+    bool isDarkMode,
   ) {
     if (!withBackground) {
       return Colors.transparent;
@@ -114,28 +127,30 @@ class PronunciationButton extends ConsumerWidget {
 
     switch (state) {
       case TTSState.playing:
-        return theme.colorScheme.primary.withValues(alpha: 0.15);
+        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.25 : 0.15);
       case TTSState.loading:
-        return theme.colorScheme.primary.withValues(alpha: 0.05);
+        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.05);
       case TTSState.error:
-        return theme.colorScheme.error.withValues(alpha: 0.1);
+        return theme.colorScheme.error.withOpacity(isDarkMode ? 0.2 : 0.1);
       case TTSState.idle:
       default:
-        return theme.colorScheme.primary.withValues(alpha: 0.05);
+        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.05);
     }
   }
 
-  /// Obtiene el color del borde según el estado
-  Color _getBorderColor(TTSState state, ThemeData theme) {
+  /// Obtiene el color del borde según el estado y el tema
+  Color _getBorderColor(TTSState state, ThemeData theme, bool isDarkMode) {
+    final opacity = isDarkMode ? 0.4 : 0.3;
+
     switch (state) {
       case TTSState.playing:
-        return theme.colorScheme.primary.withValues(alpha: 0.3);
+        return theme.colorScheme.primary.withOpacity(opacity);
       case TTSState.error:
-        return theme.colorScheme.error.withValues(alpha: 0.3);
+        return theme.colorScheme.error.withOpacity(opacity);
       case TTSState.idle:
       case TTSState.loading:
       default:
-        return theme.colorScheme.primary.withValues(alpha: 0.1);
+        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.3 : 0.1);
     }
   }
 

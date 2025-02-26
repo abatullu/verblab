@@ -10,7 +10,7 @@ import 'verb_forms.dart';
 ///
 /// Este componente muestra las formas principales de un verbo y
 /// proporciona una visualización clara de la información más relevante
-/// para el usuario.
+/// para el usuario. Optimizada para soportar tema claro y oscuro.
 class VerbCard extends ConsumerWidget {
   /// El verbo a mostrar
   final Verb verb;
@@ -34,6 +34,9 @@ class VerbCard extends ConsumerWidget {
     final appState = ref.watch(appStateProvider);
     final currentDialect = appState.currentDialect;
 
+    // Detectar si estamos en modo oscuro
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
@@ -44,8 +47,13 @@ class VerbCard extends ConsumerWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        splashColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
+        // Colores adaptados según tema claro u oscuro
+        splashColor: theme.colorScheme.primary.withOpacity(
+          isDarkMode ? 0.2 : 0.1,
+        ),
+        highlightColor: theme.colorScheme.primary.withOpacity(
+          isDarkMode ? 0.15 : 0.05,
+        ),
         child: Padding(
           padding: EdgeInsets.all(
             compact ? VerbLabTheme.spacing['md']! : VerbLabTheme.spacing['lg']!,
@@ -75,7 +83,7 @@ class VerbCard extends ConsumerWidget {
                   ),
 
                   // Mostrar siempre el badge de dialecto para facilitar la identificación
-                  _buildDialectBadge(theme, currentDialect),
+                  _buildDialectBadge(theme, currentDialect, isDarkMode),
                 ],
               ),
 
@@ -102,6 +110,7 @@ class VerbCard extends ConsumerWidget {
                     width: double.infinity,
                     padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
                     decoration: BoxDecoration(
+                      // Color adaptativo según el tema
                       color: theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(
                         VerbLabTheme.radius['md']!,
@@ -122,8 +131,12 @@ class VerbCard extends ConsumerWidget {
     );
   }
 
-  /// Construye un badge para mostrar el dialecto actual
-  Widget _buildDialectBadge(ThemeData theme, String currentDialect) {
+  /// Construye un badge para mostrar el dialecto actual (compatible con dark mode)
+  Widget _buildDialectBadge(
+    ThemeData theme,
+    String currentDialect,
+    bool isDarkMode,
+  ) {
     final isUS = currentDialect == 'en-US';
     final label = isUS ? 'US' : 'UK';
 
@@ -133,10 +146,14 @@ class VerbCard extends ConsumerWidget {
         vertical: VerbLabTheme.spacing['xs']!,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.3),
+        // Color adaptativo según el tema
+        color:
+            isDarkMode
+                ? theme.colorScheme.primary.withOpacity(0.2)
+                : theme.colorScheme.primaryContainer.withOpacity(0.3),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
         border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
+          color: theme.colorScheme.primary.withOpacity(0.2),
           width: 1,
         ),
       ),
@@ -144,7 +161,7 @@ class VerbCard extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(Icons.language, size: 14, color: theme.colorScheme.primary),
-          SizedBox(width: VerbLabTheme.spacing['xs']!),
+          SizedBox(width: VerbLabTheme.spacing['xs']),
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
