@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/themes/app_theme.dart';
-import '../../../core/providers/theme_provider.dart';
+import '../../../core/providers/user_preferences_provider.dart'; // Nuevo import
 
 /// Widget para alternar entre temas claro y oscuro.
 ///
@@ -20,7 +20,12 @@ class ThemeToggle extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDarkMode = ref.watch(themeProvider);
+    // Obtener el estado isDarkMode desde las preferencias de usuario
+    final preferencesAsync = ref.watch(userPreferencesNotifierProvider);
+    final isDarkMode = preferencesAsync.maybeWhen(
+      data: (preferences) => preferences.isDarkMode,
+      orElse: () => ThemeMode.system == ThemeMode.dark,
+    );
     final theme = Theme.of(context);
 
     return Tooltip(
@@ -69,8 +74,10 @@ class ThemeToggle extends ConsumerWidget {
               // Proporcionar feedback táctil
               HapticFeedback.lightImpact();
 
-              // Cambiar el tema
-              ref.read(themeProvider.notifier).toggleTheme();
+              // Actualizar preferencia de tema (invierte el valor actual)
+              ref
+                  .read(userPreferencesNotifierProvider.notifier)
+                  .setDarkMode(!isDarkMode);
             },
             tooltip:
                 isDarkMode ? 'Switch to light mode' : 'Switch to dark mode',

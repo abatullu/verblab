@@ -79,7 +79,7 @@ class VerbLabTheme {
         onSurfaceVariant: const Color(0xFF64748B),
         outline: const Color(0xFFCBD5E1),
         outlineVariant: const Color(0xFFE2E8F0),
-        shadow: Colors.black.withOpacity(0.05),
+        shadow: Colors.black..withValues(alpha: 0.05),
       ),
       textTheme: createTextTheme(isDark: false),
       cardTheme: CardTheme(
@@ -176,14 +176,14 @@ class VerbLabTheme {
         surface: _surfaceColorDark,
         surfaceContainerHighest: _darkSurfaceContainerHighestColor,
         onSurface: Colors.white,
-        onSurfaceVariant: Colors.white.withOpacity(0.7),
-        outline: Colors.white.withOpacity(0.2),
-        outlineVariant: Colors.white.withOpacity(0.1),
-        shadow: Colors.black.withOpacity(0.2),
+        onSurfaceVariant: Colors.white.withValues(alpha: 0.7),
+        outline: Colors.white.withValues(alpha: 0.2),
+        outlineVariant: Colors.white.withValues(alpha: 0.1),
+        shadow: Colors.black.withValues(alpha: 0.2),
         // Añadimos colores específicos para contenedores en modo oscuro
-        surfaceTint: _primaryColorDark.withOpacity(0.1),
+        surfaceTint: _primaryColorDark.withValues(alpha: 0.1),
         secondaryContainer: _darkSurfaceContainerColor,
-        primaryContainer: _primaryColorDark.withOpacity(0.2),
+        primaryContainer: _primaryColorDark.withValues(alpha: 0.2),
       ),
       // Usamos un tema de texto específico para dark mode
       textTheme: createTextTheme(isDark: true),
@@ -261,10 +261,10 @@ class VerbLabTheme {
         textStyle: GoogleFonts.inter(fontSize: 12, color: Colors.white),
       ),
       // Configuraciones para iconos en modo oscuro
-      iconTheme: IconThemeData(color: Colors.white.withOpacity(0.7), size: 24),
+      iconTheme: IconThemeData(color: Colors.white.withValues(alpha: 0.7), size: 24),
       // Configuraciones para divisores en modo oscuro
       dividerTheme: DividerThemeData(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         thickness: 1,
         space: 1,
       ),
@@ -275,7 +275,7 @@ class VerbLabTheme {
   static TextTheme createTextTheme({required bool isDark}) {
     final baseColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final variantColor =
-        isDark ? Colors.white.withOpacity(0.7) : const Color(0xFF64748B);
+        isDark ? Colors.white.withValues(alpha: 0.7) : const Color(0xFF64748B);
 
     return TextTheme(
       // Títulos grandes

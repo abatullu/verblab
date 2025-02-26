@@ -103,11 +103,11 @@ class ContextualUsageSection extends StatelessWidget {
               // Color adaptativo según el tema
               color:
                   isDarkMode
-                      ? theme.colorScheme.primary.withOpacity(0.2)
-                      : theme.colorScheme.primary.withOpacity(0.1),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                      : theme.colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
               border: Border.all(
-                color: theme.colorScheme.primary.withOpacity(0.2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.2),
                 width: 1,
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/tts_state.dart';
 import 'usecase_providers.dart';
+import 'user_preferences_provider.dart'; // Nuevo import
 
 /// StateNotifier que gestiona el estado global de la aplicación.
 ///
@@ -12,7 +13,14 @@ class AppStateNotifier extends StateNotifier<AppState> {
   final Ref _ref;
 
   /// Constructor que recibe un Ref para acceder a otros providers
-  AppStateNotifier(this._ref) : super(AppState.initial());
+  AppStateNotifier(this._ref) : super(AppState.initial()) {
+    // Suscribirse a cambios de dialecto en las preferencias
+    _ref.listen<String>(dialectProvider, (_, dialectValue) {
+      if (dialectValue != state.currentDialect) {
+        state = state.copyWith(currentDialect: dialectValue);
+      }
+    });
+  }
 
   /// Inicializa la aplicación, cargando datos necesarios
   Future<void> initialize() async {
@@ -171,13 +179,17 @@ class AppStateNotifier extends StateNotifier<AppState> {
     }
   }
 
-  /// Cambia el dialecto actual
+  /// Cambia el dialecto actual y lo persiste
   void setDialect(String dialect) {
     if (dialect != 'en-US' && dialect != 'en-UK') {
       return; // Ignorar valores inválidos
     }
 
+    // Actualizar el estado local
     state = state.copyWith(currentDialect: dialect, clearError: true);
+
+    // Actualizar las preferencias persistentes
+    _ref.read(userPreferencesNotifierProvider.notifier).setDialect(dialect);
   }
 
   /// Limpia el error actual

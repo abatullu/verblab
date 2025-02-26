@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
-import 'core/providers/theme_provider.dart';
+import 'core/providers/user_preferences_provider.dart'; // Nuevo import
 import 'core/themes/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'presentation/widgets/common/error_view.dart';
@@ -28,9 +28,6 @@ void main() async {
       statusBarBrightness: Brightness.light,
     ),
   );
-
-  // Inicializamos SharedPreferences para el tema (depende de la implementación completa)
-  // final prefs = await SharedPreferences.getInstance();
 
   runApp(
     // Envolvemos la app con ProviderScope para habilitar Riverpod
@@ -59,7 +56,8 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
   @override
   Widget build(BuildContext context) {
     final appState = ref.watch(appStateProvider);
-    final themeMode = ref.watch(themeModeProvider);
+    // Usar el nuevo provider de tema basado en preferencias
+    final themeMode = ref.watch(userPreferenceThemeModeProvider);
 
     // Actualizar la UI según el tema seleccionado
     _updateSystemUI(themeMode == ThemeMode.dark);

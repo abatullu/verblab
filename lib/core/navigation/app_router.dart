@@ -4,13 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/pages/search_page.dart';
 import '../../presentation/pages/verb_detail_page.dart';
+import '../../presentation/pages/settings_page.dart'; // Nuevo import
 import '../../core/providers/app_state_notifier.dart';
 import 'page_transitions.dart';
 
 /// Provider para acceder al GoRouter en toda la aplicación
 final routerProvider = Provider<GoRouter>((ref) {
   // No estamos usando appState por ahora, pero lo dejamos preparado
-
   // para futuras redirecciones basadas en estado
 
   return GoRouter(
@@ -46,6 +46,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
         ],
+      ),
+
+      // Nueva ruta para la página de configuraciones
+      GoRoute(
+        path: '/settings',
+        name: 'settings',
+        pageBuilder:
+            (context, state) => FadeTransitionPage(
+              key: state.pageKey,
+              child: const SettingsPage(),
+            ),
       ),
     ],
 

@@ -8,7 +8,6 @@ import '../widgets/search/search_bar.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_card.dart';
-import '../widgets/common/theme_toggle.dart';
 
 /// Pantalla principal de búsqueda de verbos.
 ///
@@ -34,7 +33,7 @@ class SearchPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Fila con título y selector de tema
+                  // Fila con título y botón de configuración (sin ThemeToggle)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -45,8 +44,15 @@ class SearchPage extends ConsumerWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      // Selector de tema
-                      const ThemeToggle(),
+                      // Solo botón de configuración
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () => context.pushNamed('settings'),
+                        tooltip: 'Settings',
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
