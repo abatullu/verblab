@@ -53,7 +53,7 @@ class VerbCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Fila superior: Forma base y badge de dialecto (si aplica)
+              // Fila superior: Forma base y badge de dialecto
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,9 +74,8 @@ class VerbCard extends ConsumerWidget {
                     ),
                   ),
 
-                  // Badge de variante dialectal (si aplica)
-                  if (verb.hasDialectVariants)
-                    _buildDialectBadge(theme, currentDialect),
+                  // Mostrar siempre el badge de dialecto para facilitar la identificación
+                  _buildDialectBadge(theme, currentDialect),
                 ],
               ),
 

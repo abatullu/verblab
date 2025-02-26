@@ -7,6 +7,7 @@ import '../../core/providers/app_state_notifier.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_forms.dart';
+import '../widgets/verb/contextual_usage_section.dart';
 
 /// Página de detalle que muestra toda la información de un verbo.
 ///
@@ -75,9 +76,8 @@ class VerbDetailPage extends ConsumerWidget {
           ),
         ),
         actions: [
-          // Badge de dialecto
-          if (selectedVerb.hasDialectVariants)
-            _buildDialectBadge(context, currentDialect, ref),
+          // Siempre mostrar el selector de dialecto para permitir cambio de pronunciación
+          _buildDialectBadge(context, currentDialect, ref),
           SizedBox(width: VerbLabTheme.spacing['sm']),
         ],
       ),
@@ -86,7 +86,7 @@ class VerbDetailPage extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tarjeta de conjugación con el nuevo componente VerbForms
+            // Tarjeta de conjugación con el componente VerbForms
             Card(
               elevation: 0,
               shape: RoundedRectangleBorder(
@@ -110,37 +110,36 @@ class VerbDetailPage extends ConsumerWidget {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        // Badge de dialecto si tiene variantes
-                        if (selectedVerb.hasDialectVariants)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: VerbLabTheme.spacing['sm']!,
-                              vertical: VerbLabTheme.spacing['xs']! / 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primaryContainer
-                                  .withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(
-                                VerbLabTheme.radius['full'] ?? 50,
-                              ),
-                            ),
-                            child: Text(
-                              dialectLabel,
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        // Badge de dialecto
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: VerbLabTheme.spacing['sm']!,
+                            vertical: VerbLabTheme.spacing['xs']! / 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primaryContainer
+                                .withValues(alpha: 0.3),
+                            borderRadius: BorderRadius.circular(
+                              VerbLabTheme.radius['full'] ?? 50,
                             ),
                           ),
+                          child: Text(
+                            dialectLabel,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                     SizedBox(height: VerbLabTheme.spacing['md']),
 
-                    // Nuevo componente de formas verbales
+                    // Componente de formas verbales
                     VerbForms(
                       verb: selectedVerb,
                       compact: false,
-                      style: VerbFormsStyle.card,
+                      style: VerbFormsStyle.flat,
                     ),
                   ],
                 ),
@@ -186,83 +185,22 @@ class VerbDetailPage extends ConsumerWidget {
 
             SizedBox(height: VerbLabTheme.spacing['md']),
 
-            // Tarjeta de usos contextuales
+            // Componente para usos contextuales (ya sin expansión)
             if (selectedVerb.contextualUsage != null &&
-                selectedVerb.contextualUsage!.isNotEmpty) ...[
-              Card(
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    VerbLabTheme.radius['lg']!,
-                  ),
-                  side: BorderSide(
-                    color: theme.colorScheme.outlineVariant,
-                    width: 1,
-                  ),
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Contextual Usage',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: VerbLabTheme.spacing['md']),
-                      ...selectedVerb.contextualUsage!.entries
-                          .map(
-                            (entry) => Padding(
-                              padding: EdgeInsets.only(
-                                bottom: VerbLabTheme.spacing['md']!,
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: VerbLabTheme.spacing['sm']!,
-                                      vertical: VerbLabTheme.spacing['xs']!,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primaryContainer
-                                          .withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(
-                                        VerbLabTheme.radius['xs']!,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      entry.key,
-                                      style: theme.textTheme.labelMedium
-                                          ?.copyWith(
-                                            color: theme.colorScheme.primary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ),
-                                  SizedBox(height: VerbLabTheme.spacing['xs']),
-                                  Text(
-                                    entry.value,
-                                    style: theme.textTheme.bodyMedium,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ],
-                  ),
-                ),
+                selectedVerb.contextualUsage!.isNotEmpty)
+              ContextualUsageSection(
+                usages: selectedVerb.contextualUsage!,
+                examples: selectedVerb.examples,
+                verbForms: selectedVerb.allForms,
               ),
-            ],
 
             SizedBox(height: VerbLabTheme.spacing['md']),
 
-            // Tarjeta de ejemplos
+            // Tarjeta de ejemplos (ahora solo mostrada si no hay usos contextuales)
             if (selectedVerb.examples != null &&
-                selectedVerb.examples!.isNotEmpty) ...[
+                selectedVerb.examples!.isNotEmpty &&
+                (selectedVerb.contextualUsage == null ||
+                    selectedVerb.contextualUsage!.isEmpty)) ...[
               Card(
                 elevation: 0,
                 shape: RoundedRectangleBorder(
@@ -301,9 +239,10 @@ class VerbDetailPage extends ConsumerWidget {
                               ),
                               SizedBox(width: 4),
                               Expanded(
-                                child: Text(
+                                child: _buildHighlightedExample(
+                                  context,
                                   example,
-                                  style: theme.textTheme.bodyMedium,
+                                  selectedVerb.allForms,
                                 ),
                               ),
                             ],
@@ -319,6 +258,70 @@ class VerbDetailPage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  /// Construye un texto de ejemplo con el verbo resaltado
+  Widget _buildHighlightedExample(
+    BuildContext context,
+    String example,
+    List<String> verbForms,
+  ) {
+    final theme = Theme.of(context);
+    final spans = <TextSpan>[];
+    String remainingText = example;
+
+    // Iterar recursivamente para encontrar y resaltar todas las ocurrencias
+    while (remainingText.isNotEmpty) {
+      bool found = false;
+
+      for (final verbForm in verbForms) {
+        if (verbForm.isEmpty) continue;
+
+        final lowercaseRemaining = remainingText.toLowerCase();
+        final lowercaseForm = verbForm.toLowerCase();
+
+        if (lowercaseRemaining.contains(lowercaseForm)) {
+          final index = lowercaseRemaining.indexOf(lowercaseForm);
+          final endIndex = index + verbForm.length;
+
+          // Añadir texto antes de la forma verbal
+          if (index > 0) {
+            spans.add(
+              TextSpan(
+                text: remainingText.substring(0, index),
+                style: theme.textTheme.bodyMedium,
+              ),
+            );
+          }
+
+          // Añadir la forma verbal resaltada
+          spans.add(
+            TextSpan(
+              text: remainingText.substring(index, endIndex),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          );
+
+          // Actualizar el texto restante
+          remainingText = remainingText.substring(endIndex);
+          found = true;
+          break;
+        }
+      }
+
+      // Si no se encontró ninguna forma verbal, añadir el resto del texto
+      if (!found) {
+        spans.add(
+          TextSpan(text: remainingText, style: theme.textTheme.bodyMedium),
+        );
+        break;
+      }
+    }
+
+    return RichText(text: TextSpan(children: spans));
   }
 
   /// Construye un badge para cambiar entre dialectos
