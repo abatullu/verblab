@@ -24,7 +24,7 @@ class VerbDetailPage extends ConsumerWidget {
     final appState = ref.watch(appStateProvider);
     final selectedVerb = appState.selectedVerb;
     final currentDialect = appState.currentDialect;
-    final dialectLabel = currentDialect == 'en-US' ? 'US' : 'UK';
+    // final dialectLabel = currentDialect == 'en-US' ? 'US' : 'UK'; // Variable no usada
 
     // Verificamos si hay un verbo seleccionado
     if (appState.isLoading) {

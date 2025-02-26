@@ -127,14 +127,21 @@ class PronunciationButton extends ConsumerWidget {
 
     switch (state) {
       case TTSState.playing:
-        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.25 : 0.15);
+        return theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.25 : 0.15,
+        );
       case TTSState.loading:
-        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.05);
+        return theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.15 : 0.05,
+        );
       case TTSState.error:
-        return theme.colorScheme.error.withOpacity(isDarkMode ? 0.2 : 0.1);
+        return theme.colorScheme.error.withValues(
+          alpha: isDarkMode ? 0.2 : 0.1,
+        );
       case TTSState.idle:
-      default:
-        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.05);
+        return theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.15 : 0.05,
+        );
     }
   }
 
@@ -144,13 +151,14 @@ class PronunciationButton extends ConsumerWidget {
 
     switch (state) {
       case TTSState.playing:
-        return theme.colorScheme.primary.withOpacity(opacity);
+        return theme.colorScheme.primary.withValues(alpha: opacity);
       case TTSState.error:
-        return theme.colorScheme.error.withOpacity(opacity);
+        return theme.colorScheme.error.withValues(alpha: opacity);
       case TTSState.idle:
       case TTSState.loading:
-      default:
-        return theme.colorScheme.primary.withOpacity(isDarkMode ? 0.3 : 0.1);
+        return theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.3 : 0.1,
+        );
     }
   }
 

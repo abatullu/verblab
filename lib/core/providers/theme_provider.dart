@@ -50,7 +50,7 @@ class ThemeNotifier extends StateNotifier<bool> {
   /// Guarda la preferencia de tema en SharedPreferences
   Future<void> _saveThemePreference() async {
     if (_prefs != null) {
-      await _prefs!.setBool(_kThemePrefsKey, state);
+      await _prefs.setBool(_kThemePrefsKey, state);
     }
   }
 }
@@ -60,7 +60,7 @@ final themeProvider = StateNotifierProvider<ThemeNotifier, bool>((ref) {
   // Obtenemos SharedPreferences de forma asíncrona
   // Como esto es un provider síncrono, usamos un enfoque con try/catch
   try {
-    final prefs = SharedPreferences.getInstance();
+    // final prefs = SharedPreferences.getInstance(); // Variable no usada
     return ThemeNotifier(null); // Temporalmente sin persistencia
 
     // En la implementación final, este código sería:

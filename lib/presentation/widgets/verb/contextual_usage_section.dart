@@ -1,7 +1,6 @@
 // lib/presentation/widgets/verb/contextual_usage_section.dart
 import 'package:flutter/material.dart';
 import '../../../core/themes/app_theme.dart';
-import '../../../core/utils/string_utils.dart';
 
 /// Widget que muestra los usos contextuales de un verbo.
 ///
