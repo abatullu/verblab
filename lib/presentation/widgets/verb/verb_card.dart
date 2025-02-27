@@ -131,7 +131,7 @@ class VerbCard extends ConsumerWidget {
     );
   }
 
-  /// Construye un badge para mostrar el dialecto actual (compatible con dark mode)
+  /// Construye un badge para mostrar el dialecto actual con indicador de variantes dialectales
   Widget _buildDialectBadge(
     ThemeData theme,
     String currentDialect,
@@ -139,6 +139,7 @@ class VerbCard extends ConsumerWidget {
   ) {
     final isUS = currentDialect == 'en-US';
     final label = isUS ? 'US' : 'UK';
+    final hasVariants = verb.hasDialectVariants;
 
     return Container(
       padding: EdgeInsets.symmetric(
@@ -146,15 +147,25 @@ class VerbCard extends ConsumerWidget {
         vertical: VerbLabTheme.spacing['xs']!,
       ),
       decoration: BoxDecoration(
-        // Color adaptativo según el tema
+        // Color adaptativo según el tema y si tiene variantes
         color:
-            isDarkMode
-                ? theme.colorScheme.primary.withOpacity(0.2)
-                : theme.colorScheme.primaryContainer.withOpacity(0.3),
+            hasVariants
+                ? (isDarkMode
+                    ? theme.colorScheme.primary.withOpacity(
+                      0.3,
+                    ) // Más intenso si hay variantes
+                    : theme.colorScheme.primary.withOpacity(0.2))
+                : (isDarkMode
+                    ? theme.colorScheme.primary.withOpacity(0.2)
+                    : theme.colorScheme.primaryContainer.withOpacity(0.15)),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
         border: Border.all(
-          color: theme.colorScheme.primary.withOpacity(0.2),
-          width: 1,
+          // Borde más destacado si hay variantes
+          color:
+              hasVariants
+                  ? theme.colorScheme.primary.withOpacity(0.4)
+                  : theme.colorScheme.primary.withOpacity(0.2),
+          width: hasVariants ? 1.5 : 1,
         ),
       ),
       child: Row(
@@ -166,9 +177,21 @@ class VerbCard extends ConsumerWidget {
             label,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.primary,
-              fontWeight: FontWeight.w600,
+              fontWeight: hasVariants ? FontWeight.bold : FontWeight.w600,
             ),
           ),
+          // Indicador visual de variantes dialectales
+          if (hasVariants) ...[
+            SizedBox(width: 2),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
         ],
       ),
     );

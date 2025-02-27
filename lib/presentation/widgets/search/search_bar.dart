@@ -20,11 +20,15 @@ class VerbSearchBar extends ConsumerStatefulWidget {
   /// Visual style: elevated or flat
   final bool elevated;
 
+  /// Focus node para controlar el foco externamente
+  final FocusNode? focusNode;
+
   const VerbSearchBar({
     super.key,
     this.hintText = 'Search for a verb...',
     this.onSubmitted,
     this.elevated = true,
+    this.focusNode,
   });
 
   @override
@@ -33,13 +37,15 @@ class VerbSearchBar extends ConsumerStatefulWidget {
 
 class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
   final _controller = TextEditingController();
-  final _focusNode = FocusNode();
+  late final FocusNode _focusNode;
   bool _isActive = false;
   Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
+    // Usar el focusNode proporcionado o crear uno nuevo
+    _focusNode = widget.focusNode ?? FocusNode();
     _controller.addListener(_onSearchChanged);
     _focusNode.addListener(() {
       setState(
@@ -51,7 +57,10 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
   @override
   void dispose() {
     _controller.dispose();
-    _focusNode.dispose();
+    // Solo disponer el focusNode si fue creado internamente
+    if (widget.focusNode == null) {
+      _focusNode.dispose();
+    }
     _debounceTimer?.cancel();
     super.dispose();
   }
@@ -170,7 +179,8 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
                   isDense: true,
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.7),
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
                 style: theme.textTheme.bodyLarge,

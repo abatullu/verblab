@@ -13,79 +13,125 @@ import '../widgets/verb/verb_card.dart';
 ///
 /// Esta pantalla permite al usuario buscar verbos y muestra
 /// los resultados con opciones para ver detalles.
-class SearchPage extends ConsumerWidget {
+class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SearchPage> createState() => _SearchPageState();
+}
+
+class _SearchPageState extends ConsumerState<SearchPage> {
+  // Controlador de scroll para detectar cuando el usuario hace scroll
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Añadir listener para detectar cuando el usuario hace scroll
+    _scrollController.addListener(_dismissKeyboardOnScroll);
+  }
+
+  @override
+  void dispose() {
+    // Limpiar el controlador de scroll
+    _scrollController.removeListener(_dismissKeyboardOnScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Método para ocultar el teclado cuando el usuario hace scroll
+  void _dismissKeyboardOnScroll() {
+    final currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+  }
+
+  // Método para ocultar el teclado cuando el usuario toca fuera del campo de búsqueda
+  void _dismissKeyboard() {
+    final currentFocus = FocusScope.of(context);
+    if (!currentFocus.hasPrimaryFocus) {
+      currentFocus.unfocus();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appState = ref.watch(appStateProvider);
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Section con título, barra de búsqueda y selector de tema
-            Padding(
-              padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Fila con título y botón de configuración (sin ThemeToggle)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'VerbLab',
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      // Solo botón de configuración
-                      IconButton(
-                        icon: Icon(
-                          Icons.settings_outlined,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                        onPressed: () => context.pushNamed('settings'),
-                        tooltip: 'Settings',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Search any irregular verb form',
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  SizedBox(height: VerbLabTheme.spacing['md']),
-                  const VerbSearchBar(),
-                ],
-              ),
-            ),
-
-            // Mensaje de error (si existe)
-            if (appState.hasError)
+    // Envolvemos todo el contenido con un GestureDetector para detectar toques
+    return GestureDetector(
+      // Ocultar teclado cuando el usuario toca fuera del campo de búsqueda
+      onTap: _dismissKeyboard,
+      // Importante: usar behavior opaco para interceptar todos los toques
+      behavior: HitTestBehavior.opaque,
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section con título, barra de búsqueda y selector de tema
               Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: VerbLabTheme.spacing['md']!,
-                ),
-                child: ErrorView(
-                  error: appState.error.toString(),
-                  compact: true,
-                  onRetry: () {
-                    ref.read(appStateProvider.notifier).clearError();
-                  },
+                padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Fila con título y botón de configuración (sin ThemeToggle)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'VerbLab',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // Solo botón de configuración
+                        IconButton(
+                          icon: Icon(
+                            Icons.settings_outlined,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          onPressed: () => context.pushNamed('settings'),
+                          tooltip: 'Settings',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Search any irregular verb form',
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    SizedBox(height: VerbLabTheme.spacing['md']),
+                    const VerbSearchBar(),
+                  ],
                 ),
               ),
 
-            // Área de resultados
-            Expanded(child: _buildResultsArea(context, ref, appState)),
-          ],
+              // Mensaje de error (si existe)
+              if (appState.hasError)
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: VerbLabTheme.spacing['md']!,
+                  ),
+                  child: ErrorView(
+                    error: appState.error.toString(),
+                    compact: true,
+                    onRetry: () {
+                      ref.read(appStateProvider.notifier).clearError();
+                    },
+                  ),
+                ),
+
+              // Área de resultados
+              Expanded(child: _buildResultsArea(context, ref, appState)),
+            ],
+          ),
         ),
       ),
     );
@@ -137,6 +183,7 @@ class SearchPage extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: VerbLabTheme.spacing['md']!),
       child: ListView.separated(
+        controller: _scrollController, // Asignar el controlador de scroll
         itemCount: appState.searchResults.length,
         padding: EdgeInsets.only(bottom: VerbLabTheme.spacing['md']!),
         separatorBuilder:
@@ -153,6 +200,8 @@ class SearchPage extends ConsumerWidget {
               child: VerbCard(
                 verb: verb,
                 onTap: () {
+                  // Ocultar teclado al navegar
+                  _dismissKeyboard();
                   // Usar el contexto para navegar con GoRouter
                   context.push('/verb/${verb.id}');
                 },
