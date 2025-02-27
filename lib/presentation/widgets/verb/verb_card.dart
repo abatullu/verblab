@@ -48,11 +48,11 @@ class VerbCard extends ConsumerWidget {
       child: InkWell(
         onTap: onTap,
         // Colores adaptados según tema claro u oscuro
-        splashColor: theme.colorScheme.primary.withOpacity(
-          isDarkMode ? 0.2 : 0.1,
+        splashColor: theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.2 : 0.1,
         ),
-        highlightColor: theme.colorScheme.primary.withOpacity(
-          isDarkMode ? 0.15 : 0.05,
+        highlightColor: theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.15 : 0.05,
         ),
         child: Padding(
           padding: EdgeInsets.all(
@@ -151,20 +151,22 @@ class VerbCard extends ConsumerWidget {
         color:
             hasVariants
                 ? (isDarkMode
-                    ? theme.colorScheme.primary.withOpacity(
-                      0.3,
+                    ? theme.colorScheme.primary.withValues(
+                      alpha: 0.3,
                     ) // Más intenso si hay variantes
-                    : theme.colorScheme.primary.withOpacity(0.2))
+                    : theme.colorScheme.primary.withValues(alpha: 0.2))
                 : (isDarkMode
-                    ? theme.colorScheme.primary.withOpacity(0.2)
-                    : theme.colorScheme.primaryContainer.withOpacity(0.15)),
+                    ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                    : theme.colorScheme.primaryContainer.withValues(
+                      alpha: 0.15,
+                    )),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
         border: Border.all(
           // Borde más destacado si hay variantes
           color:
               hasVariants
-                  ? theme.colorScheme.primary.withOpacity(0.4)
-                  : theme.colorScheme.primary.withOpacity(0.2),
+                  ? theme.colorScheme.primary.withValues(alpha: 0.4)
+                  : theme.colorScheme.primary.withValues(alpha: 0.2),
           width: hasVariants ? 1.5 : 1,
         ),
       ),

@@ -374,10 +374,10 @@ class VerbLabTheme {
 extension ColorExtension on Color {
   Color withValues({int? red, int? green, int? blue, double? alpha}) {
     return Color.fromRGBO(
-      red ?? this.red,
-      green ?? this.green,
-      blue ?? this.blue,
-      alpha ?? this.opacity,
+      (red ?? r.toInt()), // Convertir a int
+      (green ?? g.toInt()), // Convertir a int
+      (blue ?? b.toInt()), // Convertir a int
+      alpha ?? a, // Mantener double
     );
   }
 }

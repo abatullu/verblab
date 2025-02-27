@@ -229,8 +229,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             Icon(
               Icons.search,
               size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                iconOpacity,
+              color: theme.colorScheme.onSurfaceVariant.withValues(
+                alpha: iconOpacity,
               ),
             ),
             SizedBox(height: VerbLabTheme.spacing['md']),
@@ -245,8 +245,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             Text(
               'Search by base form, past tense or participle',
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                  isDarkMode ? 0.6 : 0.7,
+                color: theme.colorScheme.onSurfaceVariant.withValues(
+                  alpha: isDarkMode ? 0.6 : 0.7,
                 ),
               ),
               textAlign: TextAlign.center,

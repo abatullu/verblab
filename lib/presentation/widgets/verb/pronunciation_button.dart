@@ -84,11 +84,11 @@ class PronunciationButton extends ConsumerWidget {
           child: InkWell(
             onTap: isEnabled ? () => _handleTap(ref) : null,
             // Colores adaptativos según el tema
-            hoverColor: theme.colorScheme.primary.withOpacity(
-              isDarkMode ? 0.2 : 0.1,
+            hoverColor: theme.colorScheme.primary.withValues(
+              alpha: isDarkMode ? 0.2 : 0.1,
             ),
-            splashColor: theme.colorScheme.primary.withOpacity(
-              isDarkMode ? 0.3 : 0.2,
+            splashColor: theme.colorScheme.primary.withValues(
+              alpha: isDarkMode ? 0.3 : 0.2,
             ),
             child: AnimatedScale(
               scale: state == TTSState.playing ? 1.1 : 1.0,
