@@ -3,6 +3,11 @@
         android:label="verblab"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Añadido meta-data para deshabilitar Impeller -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableImpeller"
+            android:value="false" />
+        <!-- Hasta aquí el Impeller -->
         <activity
             android:name=".MainActivity"
             android:exported="true"

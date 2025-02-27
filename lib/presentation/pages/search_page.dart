@@ -221,37 +221,42 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final iconOpacity = isDarkMode ? 0.7 : 0.5;
 
     return Center(
-      child: Padding(
-        padding: EdgeInsets.all(VerbLabTheme.spacing['xl']!),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.search,
-              size: 64,
-              color: theme.colorScheme.onSurfaceVariant.withValues(
-                alpha: iconOpacity,
-              ),
-            ),
-            SizedBox(height: VerbLabTheme.spacing['md']),
-            Text(
-              'Start typing to search verbs',
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: VerbLabTheme.spacing['sm']),
-            Text(
-              'Search by base form, past tense or participle',
-              style: theme.textTheme.bodyMedium?.copyWith(
+      child: SingleChildScrollView(
+        // Añadido SingleChildScrollView para solucionar el overflow
+        child: Padding(
+          padding: EdgeInsets.all(VerbLabTheme.spacing['xl']!),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize:
+                MainAxisSize.min, // Añadido para minimizar el tamaño vertical
+            children: [
+              Icon(
+                Icons.search,
+                size: 64,
                 color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: isDarkMode ? 0.6 : 0.7,
+                  alpha: iconOpacity,
                 ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+              SizedBox(height: VerbLabTheme.spacing['md']),
+              Text(
+                'Start typing to search verbs',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: VerbLabTheme.spacing['sm']),
+              Text(
+                'Search by base form, past tense or participle',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant.withValues(
+                    alpha: isDarkMode ? 0.6 : 0.7,
+                  ),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
