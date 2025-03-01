@@ -24,7 +24,7 @@ class VerbDetailPage extends ConsumerWidget {
     final appState = ref.watch(appStateProvider);
     final selectedVerb = appState.selectedVerb;
     final currentDialect = appState.currentDialect;
-    // final dialectLabel = currentDialect == 'en-US' ? 'US' : 'UK'; // Variable no usada
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     // Verificamos si hay un verbo seleccionado
     if (appState.isLoading) {
@@ -63,8 +63,21 @@ class VerbDetailPage extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: _buildAppBar(context, theme, selectedVerb, currentDialect, ref),
-      body: _buildBody(context, theme, selectedVerb, currentDialect),
+      appBar: _buildAppBar(
+        context,
+        theme,
+        selectedVerb,
+        currentDialect,
+        isDarkMode,
+      ),
+      body: _buildBody(
+        context,
+        theme,
+        selectedVerb,
+        currentDialect,
+        isDarkMode,
+        ref,
+      ),
     );
   }
 
@@ -74,12 +87,13 @@ class VerbDetailPage extends ConsumerWidget {
     ThemeData theme,
     dynamic selectedVerb,
     String currentDialect,
-    WidgetRef ref,
+    bool isDarkMode,
   ) {
     return AppBar(
       backgroundColor: theme.colorScheme.surface,
       elevation: 0,
       centerTitle: false,
+      scrolledUnderElevation: 2,
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
         onPressed: () => context.pop(),
@@ -115,7 +129,6 @@ class VerbDetailPage extends ConsumerWidget {
             ),
         ],
       ),
-      actions: [_buildDialectSelector(context, currentDialect, ref)],
     );
   }
 
@@ -125,23 +138,37 @@ class VerbDetailPage extends ConsumerWidget {
     ThemeData theme,
     dynamic selectedVerb,
     String currentDialect,
+    bool isDarkMode,
+    WidgetRef ref,
   ) {
+    // Creamos un ScrollController para detectar cuando el usuario hace scroll
+    final scrollController = ScrollController();
+
     return SingleChildScrollView(
+      controller: scrollController,
       padding: EdgeInsets.symmetric(
         horizontal: VerbLabTheme.spacing['md']!,
         vertical: VerbLabTheme.spacing['md']!,
       ),
+      physics: const BouncingScrollPhysics(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tarjeta de conjugación con el componente VerbForms
-          _buildConjugationCard(context, theme, selectedVerb, currentDialect),
+          // Tarjeta de conjugación con selector de dialecto integrado
+          _buildConjugationCard(
+            context,
+            theme,
+            selectedVerb,
+            currentDialect,
+            isDarkMode,
+            ref,
+          ),
 
           SizedBox(height: VerbLabTheme.spacing['lg']),
 
           // Tarjeta de significado
           if (selectedVerb.meaning.isNotEmpty)
-            _buildMeaningCard(context, theme, selectedVerb),
+            _buildMeaningCard(context, theme, selectedVerb, isDarkMode),
 
           if (selectedVerb.meaning.isNotEmpty)
             SizedBox(height: VerbLabTheme.spacing['lg']),
@@ -169,23 +196,26 @@ class VerbDetailPage extends ConsumerWidget {
               selectedVerb.examples!.isNotEmpty &&
               (selectedVerb.contextualUsage == null ||
                   selectedVerb.contextualUsage!.isEmpty))
-            _buildExamplesCard(context, theme, selectedVerb),
+            _buildExamplesCard(context, theme, selectedVerb, isDarkMode),
 
           // Espacio adicional al final para mejor scrolling
-          SizedBox(height: VerbLabTheme.spacing['md']),
+          SizedBox(height: VerbLabTheme.spacing['xl']),
         ],
       ),
     );
   }
 
-  /// Construye la tarjeta de conjugación mejorada
+  /// Construye la tarjeta de conjugación mejorada con selector de dialecto integrado
   Widget _buildConjugationCard(
     BuildContext context,
     ThemeData theme,
     dynamic selectedVerb,
     String currentDialect,
+    bool isDarkMode,
+    WidgetRef ref,
   ) {
-    final dialectLabel = currentDialect == 'en-US' ? 'US' : 'UK';
+    final isUS = currentDialect == 'en-US';
+    final hasVariants = selectedVerb.hasDialectVariants;
 
     return Card(
       elevation: 0,
@@ -193,54 +223,72 @@ class VerbDetailPage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['lg']!),
         side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con título y selector de dialecto
+          Padding(
+            padding: EdgeInsets.only(
+              left: VerbLabTheme.spacing['lg']!,
+              right: VerbLabTheme.spacing['lg']!,
+              top: VerbLabTheme.spacing['lg']!,
+              bottom: VerbLabTheme.spacing['md']!,
+            ),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Conjugation',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                // Badge de dialecto mejorado
-                Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: VerbLabTheme.spacing['sm']!,
-                    vertical: VerbLabTheme.spacing['xs']! / 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer.withValues(
-                      alpha: 0.3),
-                    borderRadius: BorderRadius.circular(
-                      VerbLabTheme.radius['full'] ?? 50,
-                    ),
-                  ),
-                  child: Text(
-                    dialectLabel,
-                    style: theme.textTheme.labelSmall?.copyWith(
+                // Título con ícono
+                Row(
+                  children: [
+                    Icon(
+                      Icons.format_shapes_rounded,
+                      size: 20,
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
+                    SizedBox(width: VerbLabTheme.spacing['xs']),
+                    Text(
+                      'Conjugation',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.2,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Selector de dialecto mejorado
+                _buildDialectSelector(
+                  context,
+                  currentDialect,
+                  hasVariants,
+                  theme,
+                  isDarkMode,
+                  ref,
                 ),
               ],
             ),
-            SizedBox(height: VerbLabTheme.spacing['md']),
+          ),
 
-            // Componente de formas verbales
-            VerbForms(
+          // Separador sutil
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.colorScheme.outlineVariant,
+            indent: VerbLabTheme.spacing['lg']!,
+            endIndent: VerbLabTheme.spacing['lg']!,
+          ),
+
+          // Componente de formas verbales
+          Padding(
+            padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
+            child: VerbForms(
               verb: selectedVerb,
               compact: false,
               style: VerbFormsStyle.flat,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -250,6 +298,7 @@ class VerbDetailPage extends ConsumerWidget {
     BuildContext context,
     ThemeData theme,
     dynamic selectedVerb,
+    bool isDarkMode,
   ) {
     return Card(
       elevation: 0,
@@ -257,28 +306,58 @@ class VerbDetailPage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['lg']!),
         side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Meaning',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.2,
-              ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con título
+          Padding(
+            padding: EdgeInsets.only(
+              left: VerbLabTheme.spacing['lg']!,
+              right: VerbLabTheme.spacing['lg']!,
+              top: VerbLabTheme.spacing['lg']!,
+              bottom: VerbLabTheme.spacing['md']!,
             ),
-            SizedBox(height: VerbLabTheme.spacing['md']),
-            Text(
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
+                SizedBox(width: VerbLabTheme.spacing['xs']),
+                Text(
+                  'Meaning',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.2,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Separador sutil
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.colorScheme.outlineVariant,
+            indent: VerbLabTheme.spacing['lg']!,
+            endIndent: VerbLabTheme.spacing['lg']!,
+          ),
+
+          // Contenido del significado
+          Padding(
+            padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
+            child: Text(
               selectedVerb.meaning,
               style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.5,
+                height: 1.6,
                 letterSpacing: 0.15,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -288,6 +367,7 @@ class VerbDetailPage extends ConsumerWidget {
     BuildContext context,
     ThemeData theme,
     dynamic selectedVerb,
+    bool isDarkMode,
   ) {
     return Card(
       elevation: 0,
@@ -295,123 +375,194 @@ class VerbDetailPage extends ConsumerWidget {
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['lg']!),
         side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
-      child: Padding(
-        padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Examples',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.2,
-              ),
-            ),
-            SizedBox(height: VerbLabTheme.spacing['md']),
-
-            // Lista de ejemplos mejorada
-            ...selectedVerb.examples!.map(
-              (example) => Padding(
-                padding: EdgeInsets.only(bottom: VerbLabTheme.spacing['md']!),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 24,
-                      height: 24,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.arrow_right,
-                        color: theme.colorScheme.primary,
-                        size: 22,
-                      ),
-                    ),
-                    SizedBox(width: VerbLabTheme.spacing['xs']),
-                    Expanded(
-                      child: _buildHighlightedExample(
-                        context,
-                        example,
-                        selectedVerb.allForms,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Construye un selector de dialecto mejorado
-  Widget _buildDialectSelector(
-    BuildContext context,
-    String currentDialect,
-    WidgetRef ref,
-  ) {
-    final theme = Theme.of(context);
-    final isUS = currentDialect == 'en-US';
-    final label = isUS ? 'US' : 'UK';
-    final nextLabel = isUS ? 'UK' : 'US';
-
-    return Padding(
-      padding: EdgeInsets.only(right: VerbLabTheme.spacing['sm']!),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: BorderRadius.circular(VerbLabTheme.radius['md']!),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () {
-            // Proporcionar feedback táctil
-            HapticFeedback.lightImpact();
-
-            // Cambiar el dialecto
-            final newDialect = isUS ? 'en-UK' : 'en-US';
-            ref.read(appStateProvider.notifier).setDialect(newDialect);
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                width: 1,
-              ),
-              borderRadius: BorderRadius.circular(VerbLabTheme.radius['md']!),
-            ),
-            padding: EdgeInsets.symmetric(
-              horizontal: VerbLabTheme.spacing['sm']!,
-              vertical: VerbLabTheme.spacing['xs']!,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header con título
+          Padding(
+            padding: EdgeInsets.only(
+              left: VerbLabTheme.spacing['lg']!,
+              right: VerbLabTheme.spacing['lg']!,
+              top: VerbLabTheme.spacing['lg']!,
+              bottom: VerbLabTheme.spacing['md']!,
             ),
             child: Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.language,
-                  size: 18,
+                  Icons.format_quote_rounded,
+                  size: 20,
                   color: theme.colorScheme.primary,
                 ),
                 SizedBox(width: VerbLabTheme.spacing['xs']),
-                RichText(
-                  text: TextSpan(
-                    children: [
-                      TextSpan(
-                        text: label,
-                        style: theme.textTheme.labelMedium?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      TextSpan(
-                        text: ' → $nextLabel',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Examples',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.2,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ],
             ),
+          ),
+
+          // Separador sutil
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: theme.colorScheme.outlineVariant,
+            indent: VerbLabTheme.spacing['lg']!,
+            endIndent: VerbLabTheme.spacing['lg']!,
+          ),
+
+          // Lista de ejemplos mejorada
+          Padding(
+            padding: EdgeInsets.all(VerbLabTheme.spacing['lg']!),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ...selectedVerb.examples!.map(
+                  (example) => Padding(
+                    padding: EdgeInsets.only(
+                      bottom: VerbLabTheme.spacing['md']!,
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          margin: EdgeInsets.only(top: 3),
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(
+                            Icons.arrow_right_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 22,
+                          ),
+                        ),
+                        SizedBox(width: VerbLabTheme.spacing['xs']),
+                        Expanded(
+                          child: _buildHighlightedExample(
+                            context,
+                            example,
+                            selectedVerb.allForms,
+                            isDarkMode,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Construye un selector de dialecto mejorado con animación y estado visual
+  Widget _buildDialectSelector(
+    BuildContext context,
+    String currentDialect,
+    bool hasVariants,
+    ThemeData theme,
+    bool isDarkMode,
+    WidgetRef ref,
+  ) {
+    final isUS = currentDialect == 'en-US';
+
+    // Siempre usamos un selector interactivo, independientemente de si hay variantes
+    return Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
+      clipBehavior: Clip.antiAliasWithSaveLayer,
+      child: InkWell(
+        onTap: () {
+          // Proporcionar feedback táctil más pronunciado por ser un cambio importante
+          HapticFeedback.mediumImpact();
+
+          // Cambiar el dialecto
+          final newDialect = isUS ? 'en-UK' : 'en-US';
+          ref.read(appStateProvider.notifier).setDialect(newDialect);
+        },
+        splashColor: theme.colorScheme.primary.withOpacity(0.2),
+        highlightColor: theme.colorScheme.primary.withOpacity(0.1),
+        child: Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: VerbLabTheme.spacing['sm']!,
+            vertical: VerbLabTheme.spacing['xs']!,
+          ),
+          decoration: BoxDecoration(
+            // Cambiamos el fondo y borde según si hay variantes o no
+            color:
+                hasVariants
+                    ? theme.colorScheme.primary.withOpacity(0.1)
+                    : theme.colorScheme.surfaceVariant.withOpacity(0.7),
+            borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
+            border: Border.all(
+              color:
+                  hasVariants
+                      ? theme.colorScheme.primary.withOpacity(0.3)
+                      : theme.colorScheme.outline.withOpacity(0.3),
+              width: hasVariants ? 1.5 : 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono de dialectos
+              Icon(
+                Icons.language,
+                size: 16,
+                color:
+                    hasVariants
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+              ),
+              SizedBox(width: VerbLabTheme.spacing['xs']),
+
+              // Etiqueta de dialecto actual
+              Text(
+                isUS ? 'US' : 'UK',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color:
+                      hasVariants
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              // Flecha e indicador del otro dialecto
+              Row(
+                children: [
+                  SizedBox(width: VerbLabTheme.spacing['xs']),
+                  Icon(
+                    Icons.swap_horiz_rounded,
+                    size: 16,
+                    color: (hasVariants
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurfaceVariant)
+                        .withOpacity(0.7),
+                  ),
+                  SizedBox(width: VerbLabTheme.spacing['xs']),
+                  Text(
+                    isUS ? 'UK' : 'US',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: (hasVariants
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurfaceVariant)
+                          .withOpacity(0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -423,6 +574,7 @@ class VerbDetailPage extends ConsumerWidget {
     BuildContext context,
     String example,
     List<String> verbForms,
+    bool isDarkMode,
   ) {
     final theme = Theme.of(context);
     final spans = <TextSpan>[];
@@ -448,7 +600,7 @@ class VerbDetailPage extends ConsumerWidget {
               TextSpan(
                 text: remainingText.substring(0, index),
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
+                  height: 1.6,
                   letterSpacing: 0.15,
                 ),
               ),
@@ -462,8 +614,13 @@ class VerbDetailPage extends ConsumerWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,
-                height: 1.5,
+                height: 1.6,
                 letterSpacing: 0.15,
+                // Opcional: background sutil para mejor contraste en dark mode
+                backgroundColor:
+                    isDarkMode
+                        ? theme.colorScheme.primary.withOpacity(0.15)
+                        : theme.colorScheme.primary.withOpacity(0.07),
               ),
             ),
           );
@@ -481,7 +638,7 @@ class VerbDetailPage extends ConsumerWidget {
           TextSpan(
             text: remainingText,
             style: theme.textTheme.bodyMedium?.copyWith(
-              height: 1.5,
+              height: 1.6,
               letterSpacing: 0.15,
             ),
           ),
@@ -510,6 +667,7 @@ class VerbDetailPage extends ConsumerWidget {
           'Loading...',
           style: theme.textTheme.titleLarge?.copyWith(
             color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
