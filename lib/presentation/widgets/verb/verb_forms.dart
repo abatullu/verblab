@@ -36,6 +36,7 @@ class VerbForms extends ConsumerWidget {
     final appState = ref.watch(appStateProvider);
     final theme = Theme.of(context);
     final currentDialect = appState.currentDialect;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     // Obtener las formas verbales con las variantes dialectales correctas
     final baseForm = verb.base;
@@ -81,6 +82,7 @@ class VerbForms extends ConsumerWidget {
             state: baseState,
             isFirst: true,
             isLast: false,
+            isDarkMode: isDarkMode,
           ),
 
           // Divisor (si no es la última)
@@ -95,6 +97,7 @@ class VerbForms extends ConsumerWidget {
             state: pastState,
             isFirst: false,
             isLast: false,
+            isDarkMode: isDarkMode,
           ),
 
           // Divisor (si no es la última)
@@ -109,6 +112,7 @@ class VerbForms extends ConsumerWidget {
             state: participleState,
             isFirst: false,
             isLast: true,
+            isDarkMode: isDarkMode,
           ),
         ],
       ),
@@ -133,12 +137,33 @@ class VerbForms extends ConsumerWidget {
     required TTSState state,
     required bool isFirst,
     required bool isLast,
+    required bool isDarkMode,
   }) {
     final theme = Theme.of(context);
     final verticalSpacing =
         compact ? VerbLabTheme.spacing['xs']! : VerbLabTheme.spacing['sm']!;
     final horizontalSpacing =
         compact ? VerbLabTheme.spacing['xs']! : VerbLabTheme.spacing['sm']!;
+
+    // Determinar color según el tense para ayudar en la diferenciación visual
+    Color getLabelColor() {
+      switch (tense) {
+        case 'base':
+          return theme.colorScheme.primary;
+        case 'past':
+          return isDarkMode
+              ? Color(0xFF9C8FFF) // Púrpura suave para dark mode
+              : Color(0xFF6755DB); // Púrpura para light mode
+        case 'participle':
+          return isDarkMode
+              ? Color(0xFF7BA2FF) // Azul suave para dark mode
+              : Color(0xFF3F6AD8); // Azul para light mode
+        default:
+          return theme.colorScheme.primary;
+      }
+    }
+
+    final labelColor = getLabelColor();
 
     return Padding(
       padding: EdgeInsets.only(
@@ -157,15 +182,15 @@ class VerbForms extends ConsumerWidget {
                 Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: horizontalSpacing,
-                    vertical: VerbLabTheme.spacing['xs']! / 2,
+                    vertical: VerbLabTheme.spacing['xxs']!,
                   ),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest,
+                    color: labelColor.withOpacity(isDarkMode ? 0.15 : 0.1),
                     borderRadius: BorderRadius.circular(
-                      VerbLabTheme.radius['xs']!,
+                      VerbLabTheme.radius['sm']!,
                     ),
                     border: Border.all(
-                      color: theme.colorScheme.outlineVariant,
+                      color: labelColor.withOpacity(isDarkMode ? 0.3 : 0.2),
                       width: 1,
                     ),
                   ),
@@ -175,8 +200,8 @@ class VerbForms extends ConsumerWidget {
                             ? theme.textTheme.labelSmall
                             : theme.textTheme.labelMedium)
                         ?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
+                          color: labelColor,
+                          fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
                         ),
                   ),
@@ -186,16 +211,25 @@ class VerbForms extends ConsumerWidget {
                 // Valor de la forma verbal con mejor tipografía y espaciado
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: horizontalSpacing),
-                  child: Text(
-                    form,
+                  child: AnimatedDefaultTextStyle(
+                    duration: VerbLabTheme.quick,
                     style: (compact
-                            ? theme.textTheme.titleMedium
-                            : theme.textTheme.titleLarge)
-                        ?.copyWith(
+                            ? theme.textTheme.titleMedium!
+                            : theme.textTheme.titleLarge!)
+                        .copyWith(
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.3,
                           height: 1.2,
+                          color:
+                              state == TTSState.playing
+                                  ? labelColor
+                                  : theme.colorScheme.onSurface,
                         ),
+                    child: Text(
+                      form,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ),
               ],
@@ -209,8 +243,9 @@ class VerbForms extends ConsumerWidget {
           PronunciationButton(
             verbId: verb.id,
             tense: tense,
-            size: compact ? 36 : 42,
+            size: compact ? 36 : 44,
             withBackground: true,
+            accentColor: labelColor,
           ),
         ],
       ),

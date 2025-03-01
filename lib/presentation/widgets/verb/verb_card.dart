@@ -45,89 +45,88 @@ class VerbCard extends ConsumerWidget {
         side: BorderSide(color: theme.colorScheme.outlineVariant, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        // Colores adaptados según tema claro u oscuro
-        splashColor: theme.colorScheme.primary.withValues(
-          alpha: isDarkMode ? 0.2 : 0.1,
-        ),
-        highlightColor: theme.colorScheme.primary.withValues(
-          alpha: isDarkMode ? 0.15 : 0.05,
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(
-            compact ? VerbLabTheme.spacing['md']! : VerbLabTheme.spacing['lg']!,
+      child: Material(
+        color: theme.colorScheme.surface,
+        child: InkWell(
+          onTap: onTap,
+          // Colores adaptativos según tema claro u oscuro
+          splashColor: theme.colorScheme.primary.withOpacity(
+            isDarkMode ? 0.15 : 0.08,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Fila superior: Forma base y badge de dialecto
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Forma base del verbo (destacada)
-                  Expanded(
-                    child: Text(
-                      verb.base,
-                      style: (compact
-                              ? theme.textTheme.titleLarge
-                              : theme.textTheme.headlineMedium)
-                          ?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
+          highlightColor: theme.colorScheme.primary.withOpacity(
+            isDarkMode ? 0.1 : 0.05,
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(
+              compact
+                  ? VerbLabTheme.spacing['md']!
+                  : VerbLabTheme.spacing['lg']!,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Fila superior: Forma base y badge de dialecto
+                _buildHeaderRow(theme, isDarkMode, currentDialect),
 
-                  // Mostrar siempre el badge de dialecto para facilitar la identificación
-                  _buildDialectBadge(theme, currentDialect, isDarkMode),
+                SizedBox(
+                  height:
+                      compact
+                          ? VerbLabTheme.spacing['sm']
+                          : VerbLabTheme.spacing['md'],
+                ),
+
+                // Componente de formas verbales
+                VerbForms(
+                  verb: verb,
+                  compact: compact,
+                  style: VerbFormsStyle.flat, // Estilo plano para tarjetas
+                ),
+
+                if (!compact) ...[
+                  SizedBox(height: VerbLabTheme.spacing['md']),
+
+                  // Significado (solo en modo expandido)
+                  if (verb.meaning.isNotEmpty)
+                    _buildMeaningContainer(theme, isDarkMode),
                 ],
-              ),
-
-              SizedBox(
-                height:
-                    compact
-                        ? VerbLabTheme.spacing['sm']
-                        : VerbLabTheme.spacing['md'],
-              ),
-
-              // Componente de formas verbales
-              VerbForms(
-                verb: verb,
-                compact: compact,
-                style: VerbFormsStyle.flat, // Estilo plano para tarjetas
-              ),
-
-              if (!compact) ...[
-                SizedBox(height: VerbLabTheme.spacing['md']),
-
-                // Significado (solo en modo expandido)
-                if (verb.meaning.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
-                    decoration: BoxDecoration(
-                      // Color adaptativo según el tema
-                      color: theme.colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(
-                        VerbLabTheme.radius['md']!,
-                      ),
-                    ),
-                    child: Text(
-                      verb.meaning,
-                      style: theme.textTheme.bodyMedium,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
               ],
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Construye la fila de encabezado con la forma base y el badge de dialecto
+  Widget _buildHeaderRow(
+    ThemeData theme,
+    bool isDarkMode,
+    String currentDialect,
+  ) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Forma base del verbo (destacada)
+        Expanded(
+          child: Text(
+            verb.base,
+            style: (compact
+                    ? theme.textTheme.titleLarge
+                    : theme.textTheme.headlineMedium)
+                ?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5, // Más compacto para verbos
+                ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+
+        // Badge de dialecto para facilitar la identificación
+        _buildDialectBadge(theme, currentDialect, isDarkMode),
+      ],
     );
   }
 
@@ -141,59 +140,100 @@ class VerbCard extends ConsumerWidget {
     final label = isUS ? 'US' : 'UK';
     final hasVariants = verb.hasDialectVariants;
 
-    return Container(
+    // Configurar colores según si hay variantes y el tema
+    final backgroundColor =
+        hasVariants
+            ? (isDarkMode
+                ? theme.colorScheme.primary.withOpacity(0.25)
+                : theme.colorScheme.primary.withOpacity(0.15))
+            : (isDarkMode
+                ? theme.colorScheme.surfaceVariant.withOpacity(0.5)
+                : theme.colorScheme.surfaceVariant);
+
+    final borderColor =
+        hasVariants
+            ? theme.colorScheme.primary.withOpacity(isDarkMode ? 0.5 : 0.3)
+            : theme.colorScheme.primary.withOpacity(isDarkMode ? 0.3 : 0.15);
+
+    final textColor =
+        hasVariants
+            ? theme.colorScheme.primary
+            : theme.colorScheme.onSurfaceVariant;
+
+    // Construir el badge con animación sutil
+    return AnimatedContainer(
+      duration: VerbLabTheme.quick,
       padding: EdgeInsets.symmetric(
         horizontal: VerbLabTheme.spacing['sm']!,
-        vertical: VerbLabTheme.spacing['xs']!,
+        vertical: VerbLabTheme.spacing['xxs']!,
       ),
       decoration: BoxDecoration(
-        // Color adaptativo según el tema y si tiene variantes
-        color:
-            hasVariants
-                ? (isDarkMode
-                    ? theme.colorScheme.primary.withValues(
-                      alpha: 0.3,
-                    ) // Más intenso si hay variantes
-                    : theme.colorScheme.primary.withValues(alpha: 0.2))
-                : (isDarkMode
-                    ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                    : theme.colorScheme.primaryContainer.withValues(
-                      alpha: 0.15,
-                    )),
-        borderRadius: BorderRadius.circular(VerbLabTheme.radius['sm']!),
-        border: Border.all(
-          // Borde más destacado si hay variantes
-          color:
-              hasVariants
-                  ? theme.colorScheme.primary.withValues(alpha: 0.4)
-                  : theme.colorScheme.primary.withValues(alpha: 0.2),
-          width: hasVariants ? 1.5 : 1,
-        ),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
+        border: Border.all(color: borderColor, width: hasVariants ? 1.5 : 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.language, size: 14, color: theme.colorScheme.primary),
-          SizedBox(width: VerbLabTheme.spacing['xs']),
+          Icon(Icons.language, size: 14, color: textColor),
+          SizedBox(width: VerbLabTheme.spacing['xxs']),
           Text(
             label,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.primary,
+              color: textColor,
               fontWeight: hasVariants ? FontWeight.bold : FontWeight.w600,
+              letterSpacing: 0.3,
             ),
           ),
           // Indicador visual de variantes dialectales
           if (hasVariants) ...[
-            SizedBox(width: 2),
+            SizedBox(width: 3),
             Container(
-              width: 6,
-              height: 6,
+              width: 5,
+              height: 5,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: theme.colorScheme.primary,
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Construye el contenedor para el significado del verbo
+  Widget _buildMeaningContainer(ThemeData theme, bool isDarkMode) {
+    return AnimatedContainer(
+      duration: VerbLabTheme.quick,
+      width: double.infinity,
+      padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(VerbLabTheme.radius['md']!),
+        border: Border.all(color: theme.colorScheme.outlineVariant, width: 1),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Meaning',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.primary,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+          SizedBox(height: VerbLabTheme.spacing['xs']),
+          Text(
+            verb.meaning,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              height: 1.5,
+              letterSpacing: 0.1,
+            ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
     );

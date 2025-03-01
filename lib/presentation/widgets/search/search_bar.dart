@@ -1,6 +1,7 @@
 // lib/presentation/widgets/search/search_bar.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/themes/app_theme.dart';
@@ -10,6 +11,7 @@ import '../../../core/providers/app_state_notifier.dart';
 ///
 /// Esta barra de búsqueda aplica un debounce a las búsquedas para evitar
 /// hacer demasiadas consultas mientras el usuario está escribiendo.
+/// Incluye animaciones para transiciones entre estados y feedback visual.
 class VerbSearchBar extends ConsumerStatefulWidget {
   /// Placeholder text to show when empty
   final String hintText;
@@ -35,11 +37,17 @@ class VerbSearchBar extends ConsumerStatefulWidget {
   ConsumerState<VerbSearchBar> createState() => _VerbSearchBarState();
 }
 
-class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
+class _VerbSearchBarState extends ConsumerState<VerbSearchBar>
+    with SingleTickerProviderStateMixin {
   final _controller = TextEditingController();
   late final FocusNode _focusNode;
   bool _isActive = false;
   Timer? _debounceTimer;
+  String _lastQuery = '';
+
+  // Controlador para animar el estado de búsqueda
+  late final AnimationController _animationController;
+  late final Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -47,49 +55,101 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
     // Usar el focusNode proporcionado o crear uno nuevo
     _focusNode = widget.focusNode ?? FocusNode();
     _controller.addListener(_onSearchChanged);
-    _focusNode.addListener(() {
-      setState(
-        () => _isActive = _focusNode.hasFocus || _controller.text.isNotEmpty,
-      );
+    _focusNode.addListener(_onFocusChanged);
+
+    // Configurar animación para el indicador de búsqueda
+    _animationController = AnimationController(
+      vsync: this,
+      duration: VerbLabTheme.quick,
+    );
+
+    _pulseAnimation = Tween<double>(begin: 0.9, end: 1.1).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
+
+    // Configurar animación repetitiva cuando está buscando
+    _animationController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _animationController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        _animationController.forward();
+      }
     });
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_onSearchChanged);
     _controller.dispose();
+
+    // Limpiar animación
+    _animationController.dispose();
+
     // Solo disponer el focusNode si fue creado internamente
     if (widget.focusNode == null) {
+      _focusNode.removeListener(_onFocusChanged);
       _focusNode.dispose();
     }
+
     _debounceTimer?.cancel();
     super.dispose();
   }
 
+  void _onFocusChanged() {
+    setState(() {
+      _isActive = _focusNode.hasFocus || _controller.text.isNotEmpty;
+    });
+  }
+
   void _onSearchChanged() {
-    setState(
-      () => _isActive = _focusNode.hasFocus || _controller.text.isNotEmpty,
-    );
+    setState(() {
+      _isActive = _focusNode.hasFocus || _controller.text.isNotEmpty;
+    });
+
     _debounceTimer?.cancel();
 
     final query = _controller.text.trim();
     if (query.isEmpty) {
+      // Si el campo está vacío, detener animación y limpiar resultados
+      _animationController.stop();
+      _animationController.value = 0.0;
+      _lastQuery = '';
       ref.read(appStateProvider.notifier).clearResults();
       return;
     }
 
-    _debounceTimer = Timer(
-      Duration(milliseconds: AppConstants.searchDebounceMillis),
-      () {
-        if (mounted && query.isNotEmpty) {
-          ref.read(appStateProvider.notifier).searchVerbs(query);
-        }
-      },
-    );
+    // Si el query ha cambiado, iniciar búsqueda con debounce
+    if (query != _lastQuery) {
+      _lastQuery = query;
+
+      // Comenzar animación de "buscando"
+      _animationController.forward();
+
+      _debounceTimer = Timer(
+        Duration(milliseconds: AppConstants.searchDebounceMillis),
+        () {
+          if (mounted && query.isNotEmpty) {
+            // Proporcionar feedback táctil sutil al buscar
+            HapticFeedback.selectionClick();
+            ref.read(appStateProvider.notifier).searchVerbs(query);
+          }
+        },
+      );
+    }
   }
 
   void _clearSearch() {
+    // Proporcionar feedback táctil al limpiar
+    HapticFeedback.lightImpact();
+
     _controller.clear();
     _focusNode.requestFocus();
+    _lastQuery = '';
+
+    // Detener animación
+    _animationController.stop();
+    _animationController.value = 0.0;
+
     ref.read(appStateProvider.notifier).clearResults();
   }
 
@@ -98,6 +158,13 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
     final theme = Theme.of(context);
     final appState = ref.watch(appStateProvider);
     final isLoading = appState.isLoading;
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Si la búsqueda terminó, detener animación
+    if (!isLoading && _animationController.isAnimating) {
+      _animationController.stop();
+      _animationController.value = 0.0;
+    }
 
     return AnimatedContainer(
       duration: VerbLabTheme.standard,
@@ -117,11 +184,12 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
             widget.elevated
                 ? [
                   BoxShadow(
-                    color: theme.shadowColor.withValues(
-                      alpha: isLoading ? 0.08 : 0.05,
+                    color: theme.shadowColor.withOpacity(
+                      isLoading || _isActive ? 0.12 : 0.07,
                     ),
-                    blurRadius: isLoading ? 8.0 : 4.0,
-                    offset: Offset(0, isLoading ? 2.0 : 1.0),
+                    blurRadius: isLoading || _isActive ? 8.0 : 4.0,
+                    offset: Offset(0, isLoading || _isActive ? 2.0 : 1.0),
+                    spreadRadius: isLoading || _isActive ? 1.0 : 0.0,
                   ),
                 ]
                 : null,
@@ -133,16 +201,27 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
             padding: EdgeInsets.only(left: VerbLabTheme.spacing['md']!),
             child: AnimatedSwitcher(
               duration: VerbLabTheme.quick,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (Widget child, Animation<double> animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(scale: animation, child: child),
+                );
+              },
               child:
                   isLoading
-                      ? SizedBox(
-                        key: const Key('loading_icon'),
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.primary,
+                      ? ScaleTransition(
+                        scale: _pulseAnimation,
+                        child: SizedBox(
+                          key: const Key('loading_icon'),
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              theme.colorScheme.primary,
+                            ),
                           ),
                         ),
                       )
@@ -178,18 +257,27 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withValues(
-                      alpha: 0.7,
+                    color: theme.colorScheme.onSurfaceVariant.withOpacity(
+                      isDarkMode ? 0.5 : 0.6,
                     ),
                   ),
                 ),
-                style: theme.textTheme.bodyLarge,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                  fontWeight: FontWeight.w500,
+                ),
                 textInputAction: TextInputAction.search,
                 onSubmitted: (value) {
                   if (value.trim().isNotEmpty) {
+                    // Proporcionar feedback táctil al enviar búsqueda
+                    HapticFeedback.mediumImpact();
+
                     _debounceTimer?.cancel();
                     ref.read(appStateProvider.notifier).searchVerbs(value);
                     widget.onSubmitted?.call(value);
+
+                    // Quitar foco para ocultar teclado
+                    FocusScope.of(context).unfocus();
                   }
                 },
               ),
@@ -197,18 +285,34 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar> {
           ),
 
           // Botón para limpiar búsqueda (solo visible cuando hay texto)
-          if (_controller.text.isNotEmpty)
-            Padding(
-              padding: EdgeInsets.only(right: VerbLabTheme.spacing['sm']!),
-              child: IconButton(
-                key: const Key('clear_button'),
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: _clearSearch,
-                color: theme.colorScheme.onSurfaceVariant,
-                tooltip: 'Clear search',
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
+          AnimatedSwitcher(
+            duration: VerbLabTheme.quick,
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: ScaleTransition(scale: animation, child: child),
+              );
+            },
+            child:
+                _controller.text.isNotEmpty
+                    ? Padding(
+                      padding: EdgeInsets.only(
+                        right: VerbLabTheme.spacing['sm']!,
+                      ),
+                      child: IconButton(
+                        key: const Key('clear_button'),
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: _clearSearch,
+                        color: theme.colorScheme.onSurfaceVariant,
+                        tooltip: 'Clear search',
+                        visualDensity: VisualDensity.compact,
+                        splashRadius: 20,
+                      ),
+                    )
+                    : SizedBox(width: VerbLabTheme.spacing['sm']),
+          ),
         ],
       ),
     );
