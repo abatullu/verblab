@@ -20,6 +20,7 @@ class SettingsSwitchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return SwitchListTile(
       title: Text(title, style: theme.textTheme.bodyLarge),
@@ -35,8 +36,46 @@ class SettingsSwitchTile extends StatelessWidget {
       value: value,
       onChanged: onChanged,
       secondary:
-          icon != null ? Icon(icon, color: theme.colorScheme.primary) : null,
+          icon != null
+              ? Icon(
+                icon,
+                color:
+                    value
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primary.withOpacity(0.7),
+              )
+              : null,
       activeColor: theme.colorScheme.primary,
+      activeTrackColor:
+          isDarkMode
+              ? theme.colorScheme.primaryContainer.withOpacity(0.7)
+              : theme.colorScheme.primaryContainer,
+      inactiveThumbColor:
+          isDarkMode ? Colors.white.withOpacity(0.9) : Colors.white,
+      inactiveTrackColor:
+          isDarkMode
+              ? theme.colorScheme.onSurfaceVariant.withOpacity(0.3)
+              : theme.colorScheme.outline.withOpacity(0.2),
+      trackOutlineColor: MaterialStateProperty.resolveWith<Color?>((
+        Set<MaterialState> states,
+      ) {
+        if (states.contains(MaterialState.selected)) {
+          return Colors.transparent;
+        }
+        return theme.colorScheme.outline.withOpacity(0.3);
+      }),
+      thumbIcon: MaterialStateProperty.resolveWith<Icon?>((
+        Set<MaterialState> states,
+      ) {
+        if (states.contains(MaterialState.selected)) {
+          return Icon(
+            Icons.check,
+            size: 12.0,
+            color: theme.colorScheme.onPrimary,
+          );
+        }
+        return null;
+      }),
     );
   }
 }

@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
-import 'core/providers/user_preferences_provider.dart'; // Nuevo import
+import 'core/providers/user_preferences_provider.dart';
 import 'core/themes/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'presentation/widgets/common/error_view.dart';
@@ -56,7 +56,7 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
   @override
   Widget build(BuildContext context) {
     final appState = ref.watch(appStateProvider);
-    // Usar el nuevo provider de tema basado en preferencias
+    // Usar el provider de tema basado en preferencias
     final themeMode = ref.watch(userPreferenceThemeModeProvider);
 
     // Actualizar la UI según el tema seleccionado
@@ -110,16 +110,71 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
   }
 }
 
-/// Pantalla de splash inicial
+/// Pantalla de splash mejorada con animaciones
 ///
 /// Esta pantalla se muestra mientras se inicializan los recursos
 /// necesarios para la aplicación
-class SplashScreen extends ConsumerWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  // Controlador de animación para elementos de la pantalla splash
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeInAnimation;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _slideUpAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Configurar controlador de animación
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    // Animación de fade in
+    _fadeInAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+    );
+
+    // Animación de escala
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Animación de deslizamiento hacia arriba
+    _slideUpAnimation = Tween<double>(begin: 24.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    // Iniciar animación
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -134,34 +189,114 @@ class SplashScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Logo animado de la aplicación
+            FadeTransition(
+              opacity: _fadeInAnimation,
+              child: ScaleTransition(
+                scale: _scaleAnimation,
+                child: _buildAppLogo(theme, isDarkMode),
+              ),
+            ),
+            const SizedBox(height: 32),
+
             // Título de la aplicación con estilo premium
-            Text(
-              AppConstants.appName,
-              style: theme.textTheme.headlineLarge?.copyWith(
-                color: theme.colorScheme.primary,
-                fontWeight: FontWeight.bold,
+            FadeTransition(
+              opacity: _fadeInAnimation,
+              child: Transform.translate(
+                offset: Offset(0, _slideUpAnimation.value),
+                child: Text(
+                  AppConstants.appName,
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    color: theme.colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: -0.5,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 16),
 
             // Subtítulo descriptivo
-            Text(
-              'The definitive irregular verbs app',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            FadeTransition(
+              opacity: _fadeInAnimation,
+              child: Transform.translate(
+                offset: Offset(0, _slideUpAnimation.value),
+                child: Text(
+                  'The definitive irregular verbs app',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.2,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 48),
 
             // Indicador de carga
-            CircularProgressIndicator(
-              valueColor: AlwaysStoppedAnimation<Color>(
-                theme.colorScheme.primary,
-              ),
+            FadeTransition(
+              opacity: _fadeInAnimation,
+              child: _buildLoadingIndicator(theme),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  /// Construye el logo de la app con un efecto visual de profundidad
+  Widget _buildAppLogo(ThemeData theme, bool isDarkMode) {
+    return Container(
+      width: 120,
+      height: 120,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.08),
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withOpacity(
+              isDarkMode ? 0.2 : 0.15,
+            ),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'VL',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 48,
+            fontWeight: FontWeight.bold,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Construye el indicador de carga con efectos visuales mejorados
+  Widget _buildLoadingIndicator(ThemeData theme) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 32,
+          height: 32,
+          child: CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(
+              theme.colorScheme.primary,
+            ),
+            strokeWidth: 3,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Loading verb database...',
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
     );
   }
 }

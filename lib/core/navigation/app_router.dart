@@ -4,15 +4,16 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/pages/search_page.dart';
 import '../../presentation/pages/verb_detail_page.dart';
-import '../../presentation/pages/settings_page.dart'; // Nuevo import
+import '../../presentation/pages/settings_page.dart';
 import '../../core/providers/app_state_notifier.dart';
 import 'page_transitions.dart';
 
 /// Provider para acceder al GoRouter en toda la aplicación
 final routerProvider = Provider<GoRouter>((ref) {
-  // No estamos usando appState por ahora, pero lo dejamos preparado
-  // para futuras redirecciones basadas en estado
+  // Observar el estado de la aplicación para posibles redirecciones
+  final appStateNotifier = ref.watch(appStateProvider.notifier);
 
+  // Crear el router con configuración optimizada
   return GoRouter(
     initialLocation: '/',
     debugLogDiagnostics: true,
@@ -21,13 +22,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/',
         name: 'search',
-        pageBuilder:
-            (context, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const SearchPage(),
-            ),
+        pageBuilder: (context, state) {
+          return FadeTransitionPage(
+            key: state.pageKey,
+            child: const SearchPage(),
+          );
+        },
         routes: [
-          // Ruta anidada - Detalles del verbo
+          // Ruta anidada - Detalles del verbo con transición mejorada
           GoRoute(
             path: 'verb/:id',
             name: 'verb-detail',
@@ -42,43 +44,69 @@ final routerProvider = Provider<GoRouter>((ref) {
               return SlideTransitionPage(
                 key: state.pageKey,
                 child: VerbDetailPage(verbId: verbId),
+                // Leve deslizamiento horizontal para sensación de profundidad
+                beginOffset: const Offset(0.08, 0.0),
+                curve: Curves.easeOutCubic,
               );
             },
           ),
         ],
       ),
 
-      // Nueva ruta para la página de configuraciones
+      // Ruta para la página de configuraciones con transición desde abajo
       GoRoute(
         path: '/settings',
         name: 'settings',
-        pageBuilder:
-            (context, state) => FadeTransitionPage(
-              key: state.pageKey,
-              child: const SettingsPage(),
-            ),
+        pageBuilder: (context, state) {
+          return BottomToTopTransitionPage(
+            key: state.pageKey,
+            child: const SettingsPage(),
+          );
+        },
       ),
     ],
 
-    // Redirecciones - Por ejemplo, si la aplicación no está inicializada
+    // Redirecciones - Preparado para futuros flujos
     redirect: (context, state) {
-      // Si la app no está inicializada y el usuario intenta ir a otra pantalla que no sea splash,
-      // redirigir a splash. Esto no es necesario ahora ya que SplashScreen es manejada en main.dart
-      // pero podría ser útil para futuros flujos como onboarding, login, etc.
       return null; // Sin redirecciones por ahora
     },
 
-    // Manejo de errores de navegación
-    errorBuilder:
-        (context, state) => Scaffold(
-          body: Center(
-            child: Text(
-              'Error: ${state.error}',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+    // Manejo de errores de navegación con página 404 mejorada
+    errorBuilder: (context, state) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.error_outline_rounded,
+                size: 64,
                 color: Theme.of(context).colorScheme.error,
               ),
-            ),
+              const SizedBox(height: 16),
+              Text(
+                'Page Not Found',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'The requested route "${state.uri.path}" doesn\'t exist.',
+                style: Theme.of(context).textTheme.bodyMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () => context.go('/'),
+                icon: const Icon(Icons.home),
+                label: const Text('Go Home'),
+              ),
+            ],
           ),
         ),
+      );
+    },
   );
 });

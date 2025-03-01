@@ -13,15 +13,25 @@ class FadeTransitionPage extends CustomTransitionPage<void> {
     super.name,
     super.arguments,
     super.restorationId,
+    Duration? duration,
   }) : super(
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           // Curva personalizada para una sensación más refinada
+           final curve = CurveTween(curve: Curves.easeOutSine);
+
+           // Combinar fade con una sutil animación de escala para mayor profundidad
            return FadeTransition(
-             opacity: CurveTween(curve: Curves.easeOutCubic).animate(animation),
-             child: child,
+             opacity: curve.animate(animation),
+             child: ScaleTransition(
+               scale: Tween<double>(begin: 0.97, end: 1.0).animate(
+                 CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+               ),
+               child: child,
+             ),
            );
          },
-         transitionDuration: VerbLabTheme.standard,
-         reverseTransitionDuration: VerbLabTheme.quick,
+         transitionDuration: duration ?? VerbLabTheme.standard,
+         reverseTransitionDuration: duration ?? VerbLabTheme.quick,
        );
 }
 
@@ -37,23 +47,31 @@ class SlideTransitionPage extends CustomTransitionPage<void> {
     super.restorationId,
     Offset? beginOffset,
     Curve? curve,
+    Duration? duration,
   }) : super(
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-           return SlideTransition(
-             position: Tween<Offset>(
-               begin: beginOffset ?? const Offset(1.0, 0.0),
-               end: Offset.zero,
-             ).animate(
-               CurvedAnimation(
-                 parent: animation,
-                 curve: curve ?? Curves.easeOutCubic,
-               ),
+           // Combinar deslizamiento con fade para una transición más suave
+           return FadeTransition(
+             opacity: CurvedAnimation(
+               parent: animation,
+               curve: Curves.easeOutSine,
              ),
-             child: child,
+             child: SlideTransition(
+               position: Tween<Offset>(
+                 begin: beginOffset ?? const Offset(0.08, 0.0),
+                 end: Offset.zero,
+               ).animate(
+                 CurvedAnimation(
+                   parent: animation,
+                   curve: curve ?? Curves.easeOutCubic,
+                 ),
+               ),
+               child: child,
+             ),
            );
          },
-         transitionDuration: VerbLabTheme.standard,
-         reverseTransitionDuration: VerbLabTheme.standard,
+         transitionDuration: duration ?? VerbLabTheme.standard,
+         reverseTransitionDuration: duration ?? VerbLabTheme.standard,
        );
 }
 
@@ -67,20 +85,59 @@ class ScaleTransitionPage extends CustomTransitionPage<void> {
     super.name,
     super.arguments,
     super.restorationId,
+    Duration? duration,
   }) : super(
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           // Combinación de fade y escala con curvas personalizadas
            return FadeTransition(
-             opacity: CurveTween(curve: Curves.easeOutCubic).animate(animation),
+             opacity: CurvedAnimation(
+               parent: animation,
+               curve: Curves.easeOutSine,
+             ),
              child: ScaleTransition(
-               scale: Tween<double>(begin: 0.9, end: 1.0).animate(
+               scale: Tween<double>(begin: 0.93, end: 1.0).animate(
                  CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
                ),
                child: child,
              ),
            );
          },
-         transitionDuration: VerbLabTheme.standard,
-         reverseTransitionDuration: VerbLabTheme.quick,
+         transitionDuration: duration ?? VerbLabTheme.standard,
+         reverseTransitionDuration: duration ?? VerbLabTheme.quick,
+       );
+}
+
+/// Página con transición de deslizamiento vertical desde abajo
+///
+/// Ideal para interfaces tipo sheet o pantallas de configuración
+class BottomToTopTransitionPage extends CustomTransitionPage<void> {
+  BottomToTopTransitionPage({
+    required super.child,
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+    Duration? duration,
+  }) : super(
+         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           return SlideTransition(
+             position: Tween<Offset>(
+               begin: const Offset(0.0, 0.25),
+               end: Offset.zero,
+             ).animate(
+               CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
+             ),
+             child: FadeTransition(
+               opacity: CurvedAnimation(
+                 parent: animation,
+                 curve: Curves.easeOutSine,
+               ),
+               child: child,
+             ),
+           );
+         },
+         transitionDuration: duration ?? VerbLabTheme.standard,
+         reverseTransitionDuration: duration ?? VerbLabTheme.quick,
        );
 }
 
@@ -91,4 +148,7 @@ extension GoRouterExtension on GoRouter {
 
   /// Vuelve a la pantalla de búsqueda
   void goToSearch() => go('/');
+
+  /// Navega a la pantalla de configuración
+  void goToSettings() => go('/settings');
 }

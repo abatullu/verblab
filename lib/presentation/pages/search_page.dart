@@ -8,6 +8,7 @@ import '../widgets/search/search_bar.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_card.dart';
+import '../widgets/common/theme_toggle.dart';
 
 /// Pantalla principal de búsqueda de verbos.
 ///
@@ -20,15 +21,43 @@ class SearchPage extends ConsumerStatefulWidget {
   ConsumerState<SearchPage> createState() => _SearchPageState();
 }
 
-class _SearchPageState extends ConsumerState<SearchPage> {
+class _SearchPageState extends ConsumerState<SearchPage>
+    with SingleTickerProviderStateMixin {
   // Controlador de scroll para detectar cuando el usuario hace scroll
   final ScrollController _scrollController = ScrollController();
+
+  // Controlador para animaciones
+  late final AnimationController _animationController;
+  late final Animation<double> _fadeInAnimation;
+  late final Animation<double> _slideUpAnimation;
 
   @override
   void initState() {
     super.initState();
     // Añadir listener para detectar cuando el usuario hace scroll
     _scrollController.addListener(_dismissKeyboardOnScroll);
+
+    // Configurar animaciones para elementos de UI
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    // Animación para fade in de elementos
+    _fadeInAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    );
+
+    // Animación para deslizamiento hacia arriba
+    _slideUpAnimation = Tween<double>(begin: 20.0, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
+    );
+
+    // Iniciar animaciones después de que el frame se construya
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _animationController.forward();
+    });
   }
 
   @override
@@ -36,6 +65,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     // Limpiar el controlador de scroll
     _scrollController.removeListener(_dismissKeyboardOnScroll);
     _scrollController.dispose();
+
+    // Limpiar controlador de animación
+    _animationController.dispose();
+
     super.dispose();
   }
 
@@ -59,6 +92,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final appState = ref.watch(appStateProvider);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     // Envolvemos todo el contenido con un GestureDetector para detectar toques
     return GestureDetector(
@@ -73,66 +107,82 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Header Section con título, barra de búsqueda y selector de tema
-              Padding(
-                padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Fila con título y botón de configuración (sin ThemeToggle)
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'VerbLab',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            color: theme.colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        // Solo botón de configuración
-                        IconButton(
-                          icon: Icon(
-                            Icons.settings_outlined,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                          onPressed: () => context.pushNamed('settings'),
-                          tooltip: 'Settings',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Search any irregular verb form',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    SizedBox(height: VerbLabTheme.spacing['md']),
-                    const VerbSearchBar(),
-                  ],
-                ),
-              ),
+              _buildHeaderSection(theme, isDarkMode),
 
               // Mensaje de error (si existe)
-              if (appState.hasError)
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: VerbLabTheme.spacing['md']!,
-                  ),
-                  child: ErrorView(
-                    error: appState.error.toString(),
-                    compact: true,
-                    onRetry: () {
-                      ref.read(appStateProvider.notifier).clearError();
-                    },
-                  ),
-                ),
+              if (appState.hasError) _buildErrorSection(appState),
 
               // Área de resultados
-              Expanded(child: _buildResultsArea(context, ref, appState)),
+              Expanded(
+                child: _buildResultsArea(context, ref, appState, isDarkMode),
+              ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// Construye la sección de cabecera de la página
+  Widget _buildHeaderSection(ThemeData theme, bool isDarkMode) {
+    return FadeTransition(
+      opacity: _fadeInAnimation,
+      child: Transform.translate(
+        offset: Offset(0, _slideUpAnimation.value),
+        child: Padding(
+          padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Fila con título y botones de acción
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'VerbLab',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  // Settings button
+                  IconButton(
+                    icon: Icon(
+                      Icons.settings_outlined,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                    onPressed: () => context.pushNamed('settings'),
+                    tooltip: 'Settings',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Search any irregular verb form',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              SizedBox(height: VerbLabTheme.spacing['md']),
+              const VerbSearchBar(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Construye la sección de error si es necesario
+  Widget _buildErrorSection(dynamic appState) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: VerbLabTheme.spacing['md']!),
+      child: ErrorView(
+        error: appState.error.toString(),
+        compact: true,
+        onRetry: () {
+          ref.read(appStateProvider.notifier).clearError();
+        },
       ),
     );
   }
@@ -142,6 +192,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     BuildContext context,
     WidgetRef ref,
     dynamic appState,
+    bool isDarkMode,
   ) {
     // Si está cargando y no hay resultados previos, mostrar shimmer
     if (appState.isLoading && !appState.hasResults) {
@@ -154,7 +205,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     }
 
     // Estado vacío (sin búsqueda)
-    return _buildEmptyState(context);
+    return _buildEmptyState(context, isDarkMode);
   }
 
   /// Construye el estado de carga con shimmer
@@ -202,7 +253,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 onTap: () {
                   // Ocultar teclado al navegar
                   _dismissKeyboard();
-                  // Usar el contexto para navegar con GoRouter
+
+                  // Navegar a la página de detalle del verbo
                   context.push('/verb/${verb.id}');
                 },
               ),
@@ -213,52 +265,124 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     );
   }
 
-  /// Construye el estado vacío (sin búsqueda)
-  Widget _buildEmptyState(BuildContext context) {
+  /// Construye el estado vacío (sin búsqueda) con visuales mejorados
+  Widget _buildEmptyState(BuildContext context, bool isDarkMode) {
     final theme = Theme.of(context);
-    // Detectar si estamos en modo oscuro para ajustar la opacidad
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final iconOpacity = isDarkMode ? 0.7 : 0.5;
 
+    // Efectos visuales mejorados para el estado vacío
     return Center(
       child: SingleChildScrollView(
-        // Añadido SingleChildScrollView para solucionar el overflow
         child: Padding(
           padding: EdgeInsets.all(VerbLabTheme.spacing['xl']!),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize:
-                MainAxisSize.min, // Añadido para minimizar el tamaño vertical
-            children: [
-              Icon(
-                Icons.search,
-                size: 64,
-                color: theme.colorScheme.onSurfaceVariant.withValues(
-                  alpha: iconOpacity,
-                ),
-              ),
-              SizedBox(height: VerbLabTheme.spacing['md']),
-              Text(
-                'Start typing to search verbs',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: VerbLabTheme.spacing['sm']),
-              Text(
-                'Search by base form, past tense or participle',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant.withValues(
-                    alpha: isDarkMode ? 0.6 : 0.7,
+          child: FadeTransition(
+            opacity: _fadeInAnimation,
+            child: Transform.translate(
+              offset: Offset(0, _slideUpAnimation.value),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Icono con animación de pulso sutil
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.9, end: 1.05),
+                    duration: const Duration(milliseconds: 2000),
+                    curve: Curves.easeInOutSine,
+                    builder: (context, value, child) {
+                      return Transform.scale(scale: value, child: child);
+                    },
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(
+                          isDarkMode ? 0.15 : 0.1,
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.search_rounded,
+                        size: 40,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                   ),
-                ),
-                textAlign: TextAlign.center,
+                  SizedBox(height: VerbLabTheme.spacing['md']),
+                  Text(
+                    'Start typing to search verbs',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: VerbLabTheme.spacing['sm']),
+
+                  // Instrucciones mejoradas
+                  Container(
+                    padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceVariant.withOpacity(
+                        isDarkMode ? 0.5 : 0.7,
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        VerbLabTheme.radius['md']!,
+                      ),
+                      border: Border.all(
+                        color: theme.colorScheme.outlineVariant,
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _buildSearchTip(
+                          theme,
+                          icon: Icons.text_fields_rounded,
+                          text: 'Search by base form, past tense or participle',
+                        ),
+                        SizedBox(height: VerbLabTheme.spacing['sm']),
+                        _buildSearchTip(
+                          theme,
+                          icon: Icons.travel_explore_rounded,
+                          text: 'Find US/UK variations and pronunciations',
+                        ),
+                        SizedBox(height: VerbLabTheme.spacing['sm']),
+                        _buildSearchTip(
+                          theme,
+                          icon: Icons.volume_up_rounded,
+                          text:
+                              'Listen to correct pronunciation in both dialects',
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  /// Construye un tip individual para la búsqueda
+  Widget _buildSearchTip(
+    ThemeData theme, {
+    required IconData icon,
+    required String text,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, size: 20, color: theme.colorScheme.primary),
+        SizedBox(width: VerbLabTheme.spacing['sm']),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
