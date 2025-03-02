@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_purchase/in_app_purchase.dart'; // Importar para PurchaseStatus
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:verblab/data/models/purchase_details_model.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/themes/app_theme.dart';
@@ -28,35 +28,6 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
     // Inicializar el gestor de compras
     Future.microtask(() {
       ref.read(purchaseManagerProvider).initialize();
-    });
-
-    // Escuchar actualizaciones de compras
-    ref.listen<AsyncValue<PurchaseDetailsModel>>(purchaseUpdatesProvider, (
-      _,
-      next,
-    ) {
-      next.whenData((purchaseDetails) {
-        // Actualizar UI según el estado de la compra
-        setState(() => _isLoading = false);
-
-        // Mostrar feedback según el resultado
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              purchaseDetails.message ?? 'Purchase update received',
-            ),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-
-        // Actualizar estado premium si la compra fue exitosa
-        if (purchaseDetails.status == PurchaseStatus.purchased ||
-            purchaseDetails.status == PurchaseStatus.restored) {
-          ref
-              .read(userPreferencesNotifierProvider.notifier)
-              .setPremiumStatus(true);
-        }
-      });
     });
   }
 
@@ -84,6 +55,37 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
     final theme = Theme.of(context);
     final isPremium = ref.watch(isPremiumProvider);
     final storeAvailable = ref.watch(storeAvailableProvider);
+
+    // Mover la escucha del provider a build
+    ref.listen<AsyncValue<PurchaseDetailsModel>>(purchaseUpdatesProvider, (
+      _,
+      next,
+    ) {
+      next.whenData((purchaseDetails) {
+        // Actualizar UI según el estado de la compra
+        setState(() => _isLoading = false);
+
+        // Mostrar feedback según el resultado
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                purchaseDetails.message ?? 'Purchase update received',
+              ),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+
+        // Actualizar estado premium si la compra fue exitosa
+        if (purchaseDetails.status == PurchaseStatus.purchased ||
+            purchaseDetails.status == PurchaseStatus.restored) {
+          ref
+              .read(userPreferencesNotifierProvider.notifier)
+              .setPremiumStatus(true);
+        }
+      });
+    });
 
     // Ya es premium
     if (isPremium) {

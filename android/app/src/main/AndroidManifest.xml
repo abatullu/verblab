@@ -1,13 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Permisos necesarios para monetización -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="com.android.vending.BILLING"/>
+    
     <application
         android:label="verblab"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <!-- Añadido meta-data para deshabilitar Impeller -->
+        
+        <!-- ID de aplicación AdMob para testing -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            
+        <!-- Configuración para deshabilitar Impeller -->
         <meta-data
             android:name="io.flutter.embedding.android.EnableImpeller"
             android:value="false" />
         <!-- Hasta aquí el Impeller -->
+            
         <activity
             android:name=".MainActivity"
             android:exported="true"

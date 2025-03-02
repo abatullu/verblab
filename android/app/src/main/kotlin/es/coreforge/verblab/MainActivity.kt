@@ -1,4 +1,4 @@
-package com.example.verblab
+package es.coreforge.verblab
 
 import io.flutter.embedding.android.FlutterActivity
 
