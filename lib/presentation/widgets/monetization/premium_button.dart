@@ -153,7 +153,18 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
 
   Widget _buildErrorState() {
     return widget.compact
-        ? const Icon(Icons.error_outline, color: Colors.orange, size: 24)
+        ? Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: Colors.orange.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.workspace_premium,
+            color: Colors.orange,
+            size: 20,
+          ),
+        )
         : const ErrorView(
           error: 'Store not available',
           compact: true,

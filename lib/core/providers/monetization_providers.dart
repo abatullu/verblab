@@ -6,15 +6,19 @@ import '../../data/datasources/purchase/purchase_manager.dart';
 import '../../data/models/purchase_details_model.dart';
 import 'user_preferences_provider.dart';
 
-// Providers para AdManager
-final adManagerProvider = Provider<AdManager>((ref) {
+// Providers para AdManager - Cambiado a ChangeNotifierProvider
+final adManagerProvider = ChangeNotifierProvider<AdManager>((ref) {
   return AdManager();
 });
 
 // Provider para verificar si mostrar anuncios
 final showAdsProvider = Provider<bool>((ref) {
-  final isPremium = ref.watch(isPremiumProvider);
-  return !isPremium;
+  // Para desarrollo, forzar a true independientemente del estado premium
+  return true;
+
+  // Versión original (revertir tras pruebas):
+  // final isPremium = ref.watch(isPremiumProvider);
+  // return !isPremium;
 });
 
 // Providers para PurchaseManager

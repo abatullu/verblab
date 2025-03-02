@@ -37,26 +37,37 @@ class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final showAds = ref.watch(showAdsProvider);
     final adManager = ref.watch(adManagerProvider);
 
     // No mostrar nada si es premium
     if (!showAds) return const SizedBox.shrink();
 
-    // Mostrar un contenedor vacío mientras se carga
-    if (!adManager.isBannerAdLoaded || adManager.bannerAd == null) {
-      return const SizedBox(
-        height: 50, // Altura estándar de un banner
-        width: double.infinity,
-      );
-    }
-
-    // Mostrar el anuncio
+    // Mostrar un contenedor visible mientras se carga o después de cargar
     return Container(
+      height: 50, // Altura estándar de banner
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        border: Border(
+          top: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+        ),
+      ),
       alignment: Alignment.center,
-      width: adManager.bannerAd!.size.width.toDouble(),
-      height: adManager.bannerAd!.size.height.toDouble(),
-      child: AdWidget(ad: adManager.bannerAd!),
+      child:
+          adManager.isBannerAdLoaded && adManager.bannerAd != null
+              ? SizedBox(
+                width: adManager.bannerAd!.size.width.toDouble(),
+                height: adManager.bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: adManager.bannerAd!),
+              )
+              : Text(
+                "Cargando anuncio...",
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                ),
+              ),
     );
   }
 }
