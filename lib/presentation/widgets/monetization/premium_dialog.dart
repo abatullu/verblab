@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/themes/app_theme.dart';
+import '../../../core/providers/monetization_providers.dart';
 import 'premium_button.dart';
-import '../../../core/providers/user_preferences_provider.dart';
 
 class PremiumDialog extends ConsumerWidget {
   const PremiumDialog({super.key});
@@ -68,7 +68,7 @@ class PremiumDialog extends ConsumerWidget {
             const PremiumButton(),
             SizedBox(height: VerbLabTheme.spacing['sm']),
 
-            // Botón de restaurar compras - simplemente cierra por ahora
+            // Botón de restaurar compras
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
@@ -128,19 +128,32 @@ class PremiumDialog extends ConsumerWidget {
                 child: const Text('Cancel'),
               ),
               FilledButton(
-                onPressed: () {
+                onPressed: () async {
                   Navigator.of(context).pop();
-                  // En la implementación real, esto llamaría a restorePurchases
-                  // Simulamos para el ejemplo
-                  ref
-                      .read(userPreferencesNotifierProvider.notifier)
-                      .setPremiumStatus(true);
+
+                  // Mostrar indicador de carga
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Premium status restored successfully!'),
-                      behavior: SnackBarBehavior.floating,
+                      content: Text('Restoring purchases...'),
+                      duration: Duration(seconds: 2),
                     ),
                   );
+
+                  // Llamar al método real de restauración
+                  final purchaseManager = ref.read(purchaseManagerProvider);
+                  final result = await purchaseManager.restorePurchases();
+
+                  if (!result && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Failed to start restoration process. Please try again later.',
+                        ),
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  }
+                  // Los resultados exitosos se manejarán a través del Stream de compras
                 },
                 child: const Text('Restore'),
               ),

@@ -1,9 +1,11 @@
 // lib/core/providers/app_state_notifier.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/tts_state.dart';
+import 'monetization_providers.dart';
 import 'usecase_providers.dart';
-import 'user_preferences_provider.dart'; // Nuevo import
+import 'user_preferences_provider.dart';
 
 /// StateNotifier que gestiona el estado global de la aplicación.
 ///
@@ -36,6 +38,23 @@ class AppStateNotifier extends StateNotifier<AppState> {
 
       // Inicializar la base de datos
       await initializeDatabase();
+
+      // Verificar compras previas - MODIFICADO
+      final purchaseManager = _ref.read(purchaseManagerProvider);
+      // Inicializar el gestor de compras
+      await purchaseManager.initialize();
+
+      // Verificamos el estado premium desde las preferencias de usuario
+      final prefsAsync = _ref.read(userPreferencesNotifierProvider);
+
+      // Utilizamos when para manejar los diferentes estados de forma segura
+      prefsAsync.whenData((prefs) {
+        if (prefs.isPremium) {
+          debugPrint('Premium status loaded from preferences: Active');
+        } else {
+          debugPrint('Premium status loaded from preferences: Inactive');
+        }
+      });
 
       // Actualizar el estado
       state = state.copyWith(isInitialized: true, isLoading: false);

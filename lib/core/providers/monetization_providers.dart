@@ -4,6 +4,7 @@ import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../data/datasources/ads/ad_manager.dart';
 import '../../data/datasources/purchase/purchase_manager.dart';
 import '../../data/models/purchase_details_model.dart';
+// ignore: unused_import
 import 'user_preferences_provider.dart';
 
 // Providers para AdManager - Cambiado a ChangeNotifierProvider
