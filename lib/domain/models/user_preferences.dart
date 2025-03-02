@@ -4,34 +4,43 @@ import 'package:equatable/equatable.dart';
 class UserPreferences extends Equatable {
   final String dialect;
   final bool isDarkMode;
-  // Futuras preferencias (para monetización/características premium)
+  final bool isPremium; // Nuevo campo para estado premium
 
-  const UserPreferences({this.dialect = 'en-UK', this.isDarkMode = false});
+  const UserPreferences({
+    this.dialect = 'en-UK',
+    this.isDarkMode = false,
+    this.isPremium = false, // Por defecto no es premium
+  });
 
-  // Constructor para valores por defecto
+  // Actualizar métodos
   factory UserPreferences.defaults() => const UserPreferences();
 
-  // Métodos para serialización
   Map<String, dynamic> toJson() => {
     'dialect': dialect,
     'isDarkMode': isDarkMode,
+    'isPremium': isPremium,
   };
 
   factory UserPreferences.fromJson(Map<String, dynamic> json) {
     return UserPreferences(
       dialect: json['dialect'] as String? ?? 'en-US',
       isDarkMode: json['isDarkMode'] as bool? ?? false,
+      isPremium: json['isPremium'] as bool? ?? false,
     );
   }
 
-  // Pattern match para copyWith
-  UserPreferences copyWith({String? dialect, bool? isDarkMode}) {
+  UserPreferences copyWith({
+    String? dialect,
+    bool? isDarkMode,
+    bool? isPremium,
+  }) {
     return UserPreferences(
       dialect: dialect ?? this.dialect,
       isDarkMode: isDarkMode ?? this.isDarkMode,
+      isPremium: isPremium ?? this.isPremium,
     );
   }
 
   @override
-  List<Object> get props => [dialect, isDarkMode];
+  List<Object> get props => [dialect, isDarkMode, isPremium];
 }

@@ -40,6 +40,14 @@ class UserPreferencesNotifier
     });
   }
 
+  Future<void> setPremiumStatus(bool isPremium) async {
+    state.whenData((preferences) async {
+      final newPrefs = preferences.copyWith(isPremium: isPremium);
+      await _preferencesService.savePreferences(newPrefs);
+      state = AsyncValue.data(newPrefs);
+    });
+  }
+
   Future<void> resetToDefaults() async {
     final defaults = UserPreferences.defaults();
     await _preferencesService.savePreferences(defaults);
@@ -81,5 +89,15 @@ final userPreferenceThemeModeProvider = Provider<ThemeMode>((ref) {
             preferences.isDarkMode ? ThemeMode.dark : ThemeMode.light,
     loading: () => ThemeMode.system, // Default
     error: (_, __) => ThemeMode.system, // Default on error
+  );
+});
+
+// Premium status provider
+final isPremiumProvider = Provider<bool>((ref) {
+  final preferencesAsync = ref.watch(userPreferencesNotifierProvider);
+  return preferencesAsync.when(
+    data: (preferences) => preferences.isPremium,
+    loading: () => false, // Default no premium
+    error: (_, __) => false, // Default on error
   );
 });

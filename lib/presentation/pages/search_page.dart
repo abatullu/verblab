@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/app_state_notifier.dart';
+import '../../core/providers/monetization_providers.dart';
 import '../widgets/search/search_bar.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_card.dart';
+import '../widgets/monetization/banner_ad_container.dart';
+import '../widgets/monetization/premium_button.dart';
 
 /// Pantalla principal de búsqueda de verbos.
 ///
@@ -115,6 +118,9 @@ class _SearchPageState extends ConsumerState<SearchPage>
               Expanded(
                 child: _buildResultsArea(context, ref, appState, isDarkMode),
               ),
+
+              // Banner de anuncios (si no es premium)
+              if (ref.watch(showAdsProvider)) const BannerAdContainer(),
             ],
           ),
         ),
@@ -145,14 +151,20 @@ class _SearchPageState extends ConsumerState<SearchPage>
                       letterSpacing: -0.5,
                     ),
                   ),
-                  // Settings button
-                  IconButton(
-                    icon: Icon(
-                      Icons.settings_outlined,
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                    onPressed: () => context.pushNamed('settings'),
-                    tooltip: 'Settings',
+                  // Botones de acción
+                  Row(
+                    children: [
+                      const PremiumButton(compact: true),
+                      // Settings button
+                      IconButton(
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        onPressed: () => context.pushNamed('settings'),
+                        tooltip: 'Settings',
+                      ),
+                    ],
                   ),
                 ],
               ),
