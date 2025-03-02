@@ -110,7 +110,9 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
                 (context, index) => Divider(
                   height: VerbLabTheme.spacing['lg']! * 2,
                   thickness: 1,
-                  color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                  color: theme.colorScheme.outlineVariant.withValues(
+                    alpha: 0.5,
+                  ),
                 ),
             itemBuilder:
                 (context, index) => _buildUsageItem(
@@ -177,12 +179,16 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
                   vertical: VerbLabTheme.spacing['xs']!,
                 ),
                 decoration: BoxDecoration(
-                  color: labelBaseColor.withOpacity(isDarkMode ? 0.15 : 0.1),
+                  color: labelBaseColor.withValues(
+                    alpha: isDarkMode ? 0.15 : 0.1,
+                  ),
                   borderRadius: BorderRadius.circular(
                     VerbLabTheme.radius['md']!,
                   ),
                   border: Border.all(
-                    color: labelBaseColor.withOpacity(isDarkMode ? 0.3 : 0.2),
+                    color: labelBaseColor.withValues(
+                      alpha: isDarkMode ? 0.3 : 0.2,
+                    ),
                     width: 1,
                   ),
                 ),
@@ -251,8 +257,8 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
         Container(
           padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant.withOpacity(
-              isDarkMode ? 0.3 : 0.5,
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: isDarkMode ? 0.3 : 0.5,
             ),
             borderRadius: BorderRadius.circular(VerbLabTheme.radius['md']!),
             border: Border.all(
@@ -301,10 +307,10 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
     return Container(
       padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
       decoration: BoxDecoration(
-        color: accentColor.withOpacity(isDarkMode ? 0.08 : 0.05),
+        color: accentColor.withValues(alpha: isDarkMode ? 0.08 : 0.05),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['md']!),
         border: Border.all(
-          color: accentColor.withOpacity(isDarkMode ? 0.2 : 0.15),
+          color: accentColor.withValues(alpha: isDarkMode ? 0.2 : 0.15),
           width: 1,
         ),
       ),
@@ -319,7 +325,7 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
               vertical: VerbLabTheme.spacing['xxs']!,
             ),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(isDarkMode ? 0.15 : 0.1),
+              color: accentColor.withValues(alpha: isDarkMode ? 0.15 : 0.1),
               borderRadius: BorderRadius.circular(VerbLabTheme.radius['xs']!),
             ),
             child: Text(
@@ -403,8 +409,8 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
                 fontStyle: FontStyle.italic,
                 height: 1.6,
                 letterSpacing: 0.15,
-                backgroundColor: accentColor.withOpacity(
-                  isDarkMode ? 0.15 : 0.1,
+                backgroundColor: accentColor.withValues(
+                  alpha: isDarkMode ? 0.15 : 0.1,
                 ),
               ),
             ),

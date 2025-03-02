@@ -50,11 +50,11 @@ class VerbCard extends ConsumerWidget {
         child: InkWell(
           onTap: onTap,
           // Colores adaptativos según tema claro u oscuro
-          splashColor: theme.colorScheme.primary.withOpacity(
-            isDarkMode ? 0.15 : 0.08,
+          splashColor: theme.colorScheme.primary.withValues(
+            alpha: isDarkMode ? 0.15 : 0.08,
           ),
-          highlightColor: theme.colorScheme.primary.withOpacity(
-            isDarkMode ? 0.1 : 0.05,
+          highlightColor: theme.colorScheme.primary.withValues(
+            alpha: isDarkMode ? 0.1 : 0.05,
           ),
           child: Padding(
             padding: EdgeInsets.all(
@@ -144,16 +144,22 @@ class VerbCard extends ConsumerWidget {
     final backgroundColor =
         hasVariants
             ? (isDarkMode
-                ? theme.colorScheme.primary.withOpacity(0.25)
-                : theme.colorScheme.primary.withOpacity(0.15))
+                ? theme.colorScheme.primary.withValues(alpha: 0.25)
+                : theme.colorScheme.primary.withValues(alpha: 0.15))
             : (isDarkMode
-                ? theme.colorScheme.surfaceVariant.withOpacity(0.5)
-                : theme.colorScheme.surfaceVariant);
+                ? theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.5,
+                )
+                : theme.colorScheme.surfaceContainerHighest);
 
     final borderColor =
         hasVariants
-            ? theme.colorScheme.primary.withOpacity(isDarkMode ? 0.5 : 0.3)
-            : theme.colorScheme.primary.withOpacity(isDarkMode ? 0.3 : 0.15);
+            ? theme.colorScheme.primary.withValues(
+              alpha: isDarkMode ? 0.5 : 0.3,
+            )
+            : theme.colorScheme.primary.withValues(
+              alpha: isDarkMode ? 0.3 : 0.15,
+            );
 
     final textColor =
         hasVariants

@@ -11,7 +11,7 @@ import 'page_transitions.dart';
 /// Provider para acceder al GoRouter en toda la aplicación
 final routerProvider = Provider<GoRouter>((ref) {
   // Observar el estado de la aplicación para posibles redirecciones
-  final appStateNotifier = ref.watch(appStateProvider.notifier);
+  ref.watch(appStateProvider.notifier);
 
   // Crear el router con configuración optimizada
   return GoRouter(

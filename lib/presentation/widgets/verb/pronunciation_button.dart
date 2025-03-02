@@ -170,8 +170,8 @@ class _PronunciationButtonState extends ConsumerState<PronunciationButton>
                     state == TTSState.playing
                         ? [
                           BoxShadow(
-                            color: accentColor.withOpacity(
-                              isDarkMode ? 0.3 : 0.2,
+                            color: accentColor.withValues(
+                              alpha: isDarkMode ? 0.3 : 0.2,
                             ),
                             blurRadius: 8,
                             spreadRadius: 0,
@@ -185,8 +185,12 @@ class _PronunciationButtonState extends ConsumerState<PronunciationButton>
                 shape: const CircleBorder(),
                 child: InkWell(
                   onTap: isEnabled ? () => _handleTap(ref) : null,
-                  hoverColor: accentColor.withOpacity(isDarkMode ? 0.2 : 0.1),
-                  splashColor: accentColor.withOpacity(isDarkMode ? 0.3 : 0.2),
+                  hoverColor: accentColor.withValues(
+                    alpha: isDarkMode ? 0.2 : 0.1,
+                  ),
+                  splashColor: accentColor.withValues(
+                    alpha: isDarkMode ? 0.3 : 0.2,
+                  ),
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: VerbLabTheme.quick,
@@ -226,13 +230,15 @@ class _PronunciationButtonState extends ConsumerState<PronunciationButton>
 
     switch (state) {
       case TTSState.playing:
-        return accentColor.withOpacity(isDarkMode ? 0.25 : 0.15);
+        return accentColor.withValues(alpha: isDarkMode ? 0.25 : 0.15);
       case TTSState.loading:
-        return accentColor.withOpacity(isDarkMode ? 0.15 : 0.05);
+        return accentColor.withValues(alpha: isDarkMode ? 0.15 : 0.05);
       case TTSState.error:
-        return theme.colorScheme.error.withOpacity(isDarkMode ? 0.2 : 0.1);
+        return theme.colorScheme.error.withValues(
+          alpha: isDarkMode ? 0.2 : 0.1,
+        );
       case TTSState.idle:
-        return accentColor.withOpacity(isDarkMode ? 0.15 : 0.05);
+        return accentColor.withValues(alpha: isDarkMode ? 0.15 : 0.05);
     }
   }
 
@@ -245,12 +251,12 @@ class _PronunciationButtonState extends ConsumerState<PronunciationButton>
   ) {
     switch (state) {
       case TTSState.playing:
-        return accentColor.withOpacity(isDarkMode ? 0.6 : 0.4);
+        return accentColor.withValues(alpha: isDarkMode ? 0.6 : 0.4);
       case TTSState.error:
         return theme.colorScheme.error;
       case TTSState.idle:
       case TTSState.loading:
-        return accentColor.withOpacity(isDarkMode ? 0.4 : 0.25);
+        return accentColor.withValues(alpha: isDarkMode ? 0.4 : 0.25);
     }
   }
 
@@ -311,7 +317,7 @@ class _PronunciationButtonState extends ConsumerState<PronunciationButton>
               width: iconSize * 0.8,
               height: iconSize * 0.8,
               decoration: BoxDecoration(
-                color: accentColor.withOpacity(0.3),
+                color: accentColor.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
             ),

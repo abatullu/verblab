@@ -214,7 +214,6 @@ class VerbDetailPage extends ConsumerWidget {
     bool isDarkMode,
     WidgetRef ref,
   ) {
-    final isUS = currentDialect == 'en-US';
     final hasVariants = selectedVerb.hasDialectVariants;
 
     return Card(
@@ -434,7 +433,9 @@ class VerbDetailPage extends ConsumerWidget {
                           width: 24,
                           height: 24,
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.primary.withOpacity(0.1),
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
                             shape: BoxShape.circle,
                           ),
                           alignment: Alignment.center,
@@ -474,8 +475,6 @@ class VerbDetailPage extends ConsumerWidget {
     bool isDarkMode,
     WidgetRef ref,
   ) {
-    final isUS = currentDialect == 'en-US';
-
     // Siempre usamos un selector interactivo, independientemente de si hay variantes
     return Material(
       color: Colors.transparent,
@@ -487,11 +486,11 @@ class VerbDetailPage extends ConsumerWidget {
           HapticFeedback.mediumImpact();
 
           // Cambiar el dialecto
-          final newDialect = isUS ? 'en-UK' : 'en-US';
+          final newDialect = currentDialect == 'en-US' ? 'en-UK' : 'en-US';
           ref.read(appStateProvider.notifier).setDialect(newDialect);
         },
-        splashColor: theme.colorScheme.primary.withOpacity(0.2),
-        highlightColor: theme.colorScheme.primary.withOpacity(0.1),
+        splashColor: theme.colorScheme.primary.withValues(alpha: 0.2),
+        highlightColor: theme.colorScheme.primary.withValues(alpha: 0.1),
         child: Container(
           padding: EdgeInsets.symmetric(
             horizontal: VerbLabTheme.spacing['sm']!,
@@ -501,14 +500,16 @@ class VerbDetailPage extends ConsumerWidget {
             // Cambiamos el fondo y borde según si hay variantes o no
             color:
                 hasVariants
-                    ? theme.colorScheme.primary.withOpacity(0.1)
-                    : theme.colorScheme.surfaceVariant.withOpacity(0.7),
+                    ? theme.colorScheme.primary.withValues(alpha: 0.1)
+                    : theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.7,
+                    ),
             borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
             border: Border.all(
               color:
                   hasVariants
-                      ? theme.colorScheme.primary.withOpacity(0.3)
-                      : theme.colorScheme.outline.withOpacity(0.3),
+                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                      : theme.colorScheme.outline.withValues(alpha: 0.3),
               width: hasVariants ? 1.5 : 1.0,
             ),
           ),
@@ -528,7 +529,7 @@ class VerbDetailPage extends ConsumerWidget {
 
               // Etiqueta de dialecto actual
               Text(
-                isUS ? 'US' : 'UK',
+                currentDialect == 'en-US' ? 'US' : 'UK',
                 style: theme.textTheme.labelMedium?.copyWith(
                   color:
                       hasVariants
@@ -548,16 +549,16 @@ class VerbDetailPage extends ConsumerWidget {
                     color: (hasVariants
                             ? theme.colorScheme.primary
                             : theme.colorScheme.onSurfaceVariant)
-                        .withOpacity(0.7),
+                        .withValues(alpha: 0.7),
                   ),
                   SizedBox(width: VerbLabTheme.spacing['xs']),
                   Text(
-                    isUS ? 'UK' : 'US',
-                    style: theme.textTheme.labelMedium?.copyWith(
+                    currentDialect == 'en-US' ? 'UK' : 'US',
+                    style: theme.textTheme.labelSmall?.copyWith(
                       color: (hasVariants
                               ? theme.colorScheme.primary
                               : theme.colorScheme.onSurfaceVariant)
-                          .withOpacity(0.7),
+                          .withValues(alpha: 0.7),
                     ),
                   ),
                 ],
@@ -619,8 +620,8 @@ class VerbDetailPage extends ConsumerWidget {
                 // Opcional: background sutil para mejor contraste en dark mode
                 backgroundColor:
                     isDarkMode
-                        ? theme.colorScheme.primary.withOpacity(0.15)
-                        : theme.colorScheme.primary.withOpacity(0.07),
+                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                        : theme.colorScheme.primary.withValues(alpha: 0.07),
               ),
             ),
           );

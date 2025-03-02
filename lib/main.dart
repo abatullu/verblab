@@ -249,12 +249,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.08),
+        color: theme.colorScheme.primary.withValues(
+          alpha: isDarkMode ? 0.15 : 0.08,
+        ),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withOpacity(
-              isDarkMode ? 0.2 : 0.15,
+            color: theme.colorScheme.primary.withValues(
+              alpha: isDarkMode ? 0.2 : 0.15,
             ),
             blurRadius: 20,
             spreadRadius: 2,

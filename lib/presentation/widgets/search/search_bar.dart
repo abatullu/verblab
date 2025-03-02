@@ -184,8 +184,8 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar>
             widget.elevated
                 ? [
                   BoxShadow(
-                    color: theme.shadowColor.withOpacity(
-                      isLoading || _isActive ? 0.12 : 0.07,
+                    color: theme.shadowColor.withValues(
+                      alpha: isLoading || _isActive ? 0.12 : 0.07,
                     ),
                     blurRadius: isLoading || _isActive ? 8.0 : 4.0,
                     offset: Offset(0, isLoading || _isActive ? 2.0 : 1.0),
@@ -257,8 +257,8 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar>
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant.withOpacity(
-                      isDarkMode ? 0.5 : 0.6,
+                    color: theme.colorScheme.onSurfaceVariant.withValues(
+                      alpha: isDarkMode ? 0.5 : 0.6,
                     ),
                   ),
                 ),

@@ -185,12 +185,16 @@ class VerbForms extends ConsumerWidget {
                     vertical: VerbLabTheme.spacing['xxs']!,
                   ),
                   decoration: BoxDecoration(
-                    color: labelColor.withOpacity(isDarkMode ? 0.15 : 0.1),
+                    color: labelColor.withValues(
+                      alpha: isDarkMode ? 0.15 : 0.1,
+                    ),
                     borderRadius: BorderRadius.circular(
                       VerbLabTheme.radius['sm']!,
                     ),
                     border: Border.all(
-                      color: labelColor.withOpacity(isDarkMode ? 0.3 : 0.2),
+                      color: labelColor.withValues(
+                        alpha: isDarkMode ? 0.3 : 0.2,
+                      ),
                       width: 1,
                     ),
                   ),

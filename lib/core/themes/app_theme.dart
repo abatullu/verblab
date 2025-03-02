@@ -113,12 +113,14 @@ class VerbLabTheme {
         colorScheme: ColorScheme.light(
           primary: _primaryColor,
           onPrimary: Colors.white,
-          primaryContainer: _primaryLight.withOpacity(opacity['medium']!),
+          primaryContainer: _primaryLight.withValues(alpha: opacity['medium']!),
           onPrimaryContainer: _primaryDark,
 
           secondary: _secondaryColor,
           onSecondary: Colors.white,
-          secondaryContainer: _secondaryColor.withOpacity(opacity['medium']!),
+          secondaryContainer: _secondaryColor.withValues(
+            alpha: opacity['medium']!,
+          ),
 
           error: _errorColor,
           onError: Colors.white,
@@ -127,19 +129,14 @@ class VerbLabTheme {
           onSurface: const Color(
             0xFF1A1F2B,
           ), // Texto principal más oscuro para mejor contraste
-          surfaceVariant: _surfaceContainer,
+          surfaceContainerHighest: _surfaceContainerHigh,
           onSurfaceVariant: const Color(
             0xFF555E71,
           ), // Texto secundario más contrastado
 
-          background: _surfaceColor,
-          onBackground: const Color(0xFF1A1F2B),
-
-          // Componentes específicos refinados
-          surfaceContainerHighest: _surfaceContainerHigh,
           outline: const Color(0xFFCBD5E1),
           outlineVariant: const Color(0xFFE4E9F2),
-          shadow: Colors.black.withOpacity(0.05),
+          shadow: Colors.black.withValues(alpha: 0.05),
         ),
         textTheme: createTextTheme(isDark: false),
         cardTheme: CardTheme(
@@ -164,7 +161,7 @@ class VerbLabTheme {
             vertical: spacing['sm']!,
           ),
           hintStyle: TextStyle(
-            color: const Color(0xFF1A1F2B).withOpacity(opacity['hint']!),
+            color: const Color(0xFF1A1F2B).withValues(alpha: opacity['hint']!),
           ),
         ),
         // Estilos para botones
@@ -180,7 +177,7 @@ class VerbLabTheme {
               borderRadius: BorderRadius.circular(radius['md']!),
             ),
             elevation: elevation['low'],
-            shadowColor: _primaryColor.withOpacity(0.3),
+            shadowColor: _primaryColor.withValues(alpha: 0.3),
           ),
         ),
         // Configuraciones para AppBar
@@ -309,13 +306,15 @@ class VerbLabTheme {
         colorScheme: ColorScheme.dark(
           primary: _primaryColorDark,
           onPrimary: Colors.white,
-          primaryContainer: _primaryLightDark.withOpacity(opacity['medium']!),
+          primaryContainer: _primaryLightDark.withValues(
+            alpha: opacity['medium']!,
+          ),
           onPrimaryContainer: Colors.white,
 
           secondary: _secondaryColorDark,
           onSecondary: Colors.white,
-          secondaryContainer: _secondaryColorDark.withOpacity(
-            opacity['medium']!,
+          secondaryContainer: _secondaryColorDark.withValues(
+            alpha: opacity['medium']!,
           ),
 
           error: _errorColorDark,
@@ -323,21 +322,18 @@ class VerbLabTheme {
 
           surface: _surfaceColorDark,
           onSurface: Colors.white,
-          surfaceVariant: _darkSurfaceContainer,
-          onSurfaceVariant: Colors.white.withOpacity(0.75), // Mejor contraste
-
-          background: _surfaceColorDark,
-          onBackground: Colors.white,
-
-          // Componentes específicos refinados
           surfaceContainerHighest: _darkSurfaceContainerHigh,
-          outline: Colors.white.withOpacity(0.2),
-          outlineVariant: Colors.white.withOpacity(0.1),
-          shadow: Colors.black.withOpacity(
-            0.25,
+          onSurfaceVariant: Colors.white.withValues(
+            alpha: 0.75,
+          ), // Mejor contraste
+
+          outline: Colors.white.withValues(alpha: 0.2),
+          outlineVariant: Colors.white.withValues(alpha: 0.1),
+          shadow: Colors.black.withValues(
+            alpha: 0.25,
           ), // Sombras más visibles en modo oscuro
           // Colores específicos para contenedores en modo oscuro
-          surfaceTint: _primaryColorDark.withOpacity(0.1),
+          surfaceTint: _primaryColorDark.withValues(alpha: 0.1),
         ),
         // Tema de texto específico para dark mode
         textTheme: createTextTheme(isDark: true),
@@ -364,7 +360,7 @@ class VerbLabTheme {
             vertical: spacing['sm']!,
           ),
           hintStyle: TextStyle(
-            color: Colors.white.withOpacity(opacity['hint']!),
+            color: Colors.white.withValues(alpha: opacity['hint']!),
           ),
         ),
         // Configuraciones para AppBar en modo oscuro
@@ -393,7 +389,7 @@ class VerbLabTheme {
               borderRadius: BorderRadius.circular(radius['md']!),
             ),
             elevation: elevation['medium'],
-            shadowColor: _primaryDarkDark.withOpacity(0.4),
+            shadowColor: _primaryDarkDark.withValues(alpha: 0.4),
           ),
         ),
         // Configuraciones para diálogos en modo oscuro
@@ -437,13 +433,13 @@ class VerbLabTheme {
         ),
         // Configuraciones para iconos en modo oscuro
         iconTheme: IconThemeData(
-          color: Colors.white.withOpacity(0.8),
+          color: Colors.white.withValues(alpha: 0.8),
           size: 24,
           opacity: 1.0,
         ),
         // Configuraciones para divisores en modo oscuro
         dividerTheme: DividerThemeData(
-          color: Colors.white.withOpacity(0.1),
+          color: Colors.white.withValues(alpha: 0.1),
           thickness: 1,
           space: 1,
         ),
@@ -506,7 +502,7 @@ class VerbLabTheme {
   static TextTheme createTextTheme({required bool isDark}) {
     final baseColor = isDark ? Colors.white : const Color(0xFF1A1F2B);
     final variantColor =
-        isDark ? Colors.white.withOpacity(0.75) : const Color(0xFF555E71);
+        isDark ? Colors.white.withValues(alpha: 0.75) : const Color(0xFF555E71);
 
     try {
       return TextTheme(
@@ -609,7 +605,7 @@ class VerbLabTheme {
   static TextTheme _fallbackTextTheme({required bool isDark}) {
     final baseColor = isDark ? Colors.white : const Color(0xFF1A1F2B);
     final variantColor =
-        isDark ? Colors.white.withOpacity(0.75) : const Color(0xFF555E71);
+        isDark ? Colors.white.withValues(alpha: 0.75) : const Color(0xFF555E71);
 
     return TextTheme(
       headlineLarge: TextStyle(

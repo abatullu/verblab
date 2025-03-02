@@ -8,7 +8,6 @@ import '../widgets/search/search_bar.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_card.dart';
-import '../widgets/common/theme_toggle.dart';
 
 /// Pantalla principal de búsqueda de verbos.
 ///
@@ -294,8 +293,8 @@ class _SearchPageState extends ConsumerState<SearchPage>
                       width: 80,
                       height: 80,
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withOpacity(
-                          isDarkMode ? 0.15 : 0.1,
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: isDarkMode ? 0.15 : 0.1,
                         ),
                         shape: BoxShape.circle,
                       ),
@@ -321,9 +320,8 @@ class _SearchPageState extends ConsumerState<SearchPage>
                   Container(
                     padding: EdgeInsets.all(VerbLabTheme.spacing['md']!),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.surfaceVariant.withOpacity(
-                        isDarkMode ? 0.5 : 0.7,
-                      ),
+                      color: theme.colorScheme.surfaceContainerHighest
+                          .withValues(alpha: isDarkMode ? 0.5 : 0.7),
                       borderRadius: BorderRadius.circular(
                         VerbLabTheme.radius['md']!,
                       ),
