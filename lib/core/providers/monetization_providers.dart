@@ -1,25 +1,22 @@
 // lib/core/providers/monetization_providers.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'dart:async';
 import '../../data/datasources/ads/ad_manager.dart';
 import '../../data/datasources/purchase/purchase_manager.dart';
 import '../../data/models/purchase_details_model.dart';
-// ignore: unused_import
 import 'user_preferences_provider.dart';
 
-// Providers para AdManager - Cambiado a ChangeNotifierProvider
+// Provider para AdManager con ChangeNotifierProvider para notificaciones automáticas
 final adManagerProvider = ChangeNotifierProvider<AdManager>((ref) {
   return AdManager();
 });
 
 // Provider para verificar si mostrar anuncios
 final showAdsProvider = Provider<bool>((ref) {
-  // Para desarrollo, forzar a true independientemente del estado premium
-  return true;
-
-  // Versión original (revertir tras pruebas):
-  // final isPremium = ref.watch(isPremiumProvider);
-  // return !isPremium;
+  final isPremium = ref.watch(isPremiumProvider);
+  return !isPremium;
 });
 
 // Providers para PurchaseManager

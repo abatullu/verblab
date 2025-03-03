@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../core/providers/monetization_providers.dart';
+import '../../../core/themes/app_theme.dart';
 
 class BannerAdContainer extends ConsumerStatefulWidget {
   const BannerAdContainer({super.key});
@@ -12,6 +13,10 @@ class BannerAdContainer extends ConsumerStatefulWidget {
 }
 
 class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
+  bool _hasTriedLoading = false;
+  bool _isLoading = true;
+  String? _errorMessage;
+
   @override
   void initState() {
     super.initState();
@@ -19,13 +24,37 @@ class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
   }
 
   Future<void> _loadAd() async {
-    final showAds = ref.read(showAdsProvider);
-    if (!showAds) return;
+    setState(() {
+      _hasTriedLoading = true;
+      _isLoading = true;
+      _errorMessage = null;
+    });
 
-    final adManager = ref.read(adManagerProvider);
-    await adManager.loadBannerAd();
-    // Forzar reconstrucción cuando el anuncio se carga
-    if (mounted) setState(() {});
+    final showAds = ref.read(showAdsProvider);
+    if (!showAds) {
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
+
+    try {
+      final adManager = ref.read(adManagerProvider);
+      await adManager.loadBannerAd();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.toString();
+        });
+      }
+    }
   }
 
   @override
@@ -51,22 +80,52 @@ class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
       decoration: BoxDecoration(
         color: theme.colorScheme.primary.withValues(alpha: 0.1),
         border: Border(
-          top: BorderSide(color: theme.colorScheme.primary.withValues(alpha: 0.2)),
+          top: BorderSide(
+            color: theme.colorScheme.primary.withValues(alpha: 0.2),
+          ),
         ),
       ),
       alignment: Alignment.center,
       child:
           adManager.isBannerAdLoaded && adManager.bannerAd != null
-              ? SizedBox(
-                width: adManager.bannerAd!.size.width.toDouble(),
-                height: adManager.bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: adManager.bannerAd!),
-              )
-              : Text(
-                "Cargando anuncio...",
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.7),
-                ),
+              ? AdWidget(ad: adManager.bannerAd!)
+              : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isLoading)
+                    SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ),
+                  if (_isLoading) const SizedBox(width: 8),
+                  Text(
+                    _errorMessage ?? "Cargando anuncio...",
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color:
+                          _errorMessage != null
+                              ? theme.colorScheme.error
+                              : theme.colorScheme.primary.withValues(
+                                alpha: 0.7,
+                              ),
+                    ),
+                  ),
+                  if (!_isLoading && !adManager.isBannerAdLoaded)
+                    IconButton(
+                      icon: Icon(
+                        Icons.refresh,
+                        size: 16,
+                        color: theme.colorScheme.primary.withValues(alpha: 0.7),
+                      ),
+                      onPressed: _loadAd,
+                      tooltip: 'Reintentar',
+                    ),
+                ],
               ),
     );
   }

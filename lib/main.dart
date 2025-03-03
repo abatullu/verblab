@@ -2,25 +2,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart'; // Añadir este import
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
 import 'core/providers/user_preferences_provider.dart';
+import 'core/providers/monetization_providers.dart'; // Añadir este import
 import 'core/themes/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'presentation/widgets/common/error_view.dart';
 import 'presentation/widgets/common/theme_toggle.dart';
 
-void main() async {
+Future<void> _initializeApp() async {
   // Aseguramos que Flutter esté inicializado
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Inicializar AdMob
+  try {
+    await MobileAds.instance.initialize();
+    debugPrint('AdMob SDK initialized successfully');
+  } catch (e) {
+    debugPrint('Error initializing AdMob: $e');
+    // Continuamos ejecución aunque falle AdMob
+  }
 
   // Configuramos la orientación preferida de la app
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+}
 
-  // Configuramos el estilo de la barra de estado (será actualizado dinámicamente)
+void main() async {
+  await _initializeApp();
+
+  // Configuramos el estilo de la barra de estado
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -29,10 +44,7 @@ void main() async {
     ),
   );
 
-  runApp(
-    // Envolvemos la app con ProviderScope para habilitar Riverpod
-    const ProviderScope(child: VerbLabApp()),
-  );
+  runApp(const ProviderScope(child: VerbLabApp()));
 }
 
 /// Widget principal de la aplicación VerbLab
@@ -50,6 +62,10 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
     // Inicializar datos al arrancar la app
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(appStateProvider.notifier).initialize();
+
+      // Inicializar y precargar anuncios
+      ref.read(adManagerProvider).initialize();
+      ref.read(adManagerProvider).loadBannerAd();
     });
   }
 

@@ -1,6 +1,7 @@
 // lib/data/datasources/ads/ad_manager.dart
 import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:async';
 import '../../../core/error/failures.dart';
 
 class AdManager extends ChangeNotifier {
@@ -12,21 +13,26 @@ class AdManager extends ChangeNotifier {
   bool _isInitialized = false;
   BannerAd? _bannerAd;
   bool _isBannerAdLoaded = false;
+  int _retryAttempt = 0;
+
+  // Constantes para reintentos
+  static const int maxRetryAttempts = 3;
+  static const Duration retryDelay = Duration(seconds: 5);
 
   bool get isBannerAdLoaded => _isBannerAdLoaded;
   BannerAd? get bannerAd => _bannerAd;
 
   // IDs de anuncios oficiales de prueba de Google
-  // https://developers.google.com/admob/android/test-ads
   static const Map<String, String> _testBannerAdUnitIds = {
     'android': 'ca-app-pub-3940256099942544/6300978111',
     'ios': 'ca-app-pub-3940256099942544/2934735716',
   };
 
-  // IDs de anuncios para producción (a completar en futuro)
+  // IDs de anuncios para producción
   static const Map<String, String> _prodBannerAdUnitIds = {
-    'android': 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Pendiente
-    'ios': 'ca-app-pub-XXXXXXXXXXXXXXXX/XXXXXXXXXX', // Pendiente
+    'android':
+        'ca-app-pub-1967341918321288/4875437638', // Reemplaza con tu ID real
+    'ios': 'ca-app-pub-1967341918321288/4875437638', // Reemplaza con tu ID real
   };
 
   Future<void> initialize() async {
@@ -36,6 +42,7 @@ class AdManager extends ChangeNotifier {
       await MobileAds.instance.initialize();
       _isInitialized = true;
       debugPrint('AdMob initialized successfully');
+      notifyListeners();
     } catch (e, stack) {
       final error = NetworkFailure(
         message: 'Failed to initialize AdMob',
@@ -49,15 +56,17 @@ class AdManager extends ChangeNotifier {
   }
 
   String _getBannerAdUnitId() {
-    // En debug usamos IDs de prueba
-    final isTest = kDebugMode;
+    // En debug o perfil usamos IDs de prueba, en release los reales
+    final isTest = kDebugMode || kProfileMode;
     final platform =
         defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
 
     // Seleccionar el mapa correcto según entorno
     final adIdMap = isTest ? _testBannerAdUnitIds : _prodBannerAdUnitIds;
+    final id = adIdMap[platform] ?? '';
 
-    return adIdMap[platform] ?? '';
+    debugPrint('Using AdMob ID: $id (isTest: $isTest, platform: $platform)');
+    return id;
   }
 
   Future<void> loadBannerAd() async {
@@ -76,14 +85,16 @@ class AdManager extends ChangeNotifier {
           onAdLoaded: (ad) {
             debugPrint('Banner ad loaded successfully');
             _isBannerAdLoaded = true;
-            notifyListeners(); // Notificar a los observadores
+            _retryAttempt = 0;
+            notifyListeners();
           },
           onAdFailedToLoad: (ad, error) {
-            debugPrint('Banner ad failed to load: ${error.message}');
+            debugPrint(
+              'Banner ad failed to load: ${error.message}, code: ${error.code}',
+            );
             ad.dispose();
             _bannerAd = null;
-            _isBannerAdLoaded = false;
-            notifyListeners(); // Notificar a los observadores
+            _retryLoadAd();
           },
           onAdClosed: (ad) {
             debugPrint('Banner ad closed');
@@ -103,7 +114,26 @@ class AdManager extends ChangeNotifier {
       );
       error.log();
       _isBannerAdLoaded = false;
-      notifyListeners(); // Notificar a los observadores
+      _retryLoadAd();
+    }
+  }
+
+  void _retryLoadAd() {
+    if (_retryAttempt < maxRetryAttempts) {
+      _retryAttempt++;
+      debugPrint(
+        'Retrying banner ad load (attempt $_retryAttempt of $maxRetryAttempts)',
+      );
+
+      Timer(retryDelay, () {
+        _bannerAd = null;
+        loadBannerAd();
+      });
+    } else {
+      debugPrint('Banner ad failed after $maxRetryAttempts attempts');
+      _retryAttempt = 0;
+      _isBannerAdLoaded = false;
+      notifyListeners();
     }
   }
 
@@ -111,6 +141,6 @@ class AdManager extends ChangeNotifier {
     _bannerAd?.dispose();
     _bannerAd = null;
     _isBannerAdLoaded = false;
-    notifyListeners(); // Notificar a los observadores
+    notifyListeners();
   }
 }
