@@ -31,8 +31,8 @@ class AdManager extends ChangeNotifier {
   // IDs de anuncios para producción
   static const Map<String, String> _prodBannerAdUnitIds = {
     'android':
-        'ca-app-pub-1967341918321288/4875437638', // Reemplaza con tu ID real
-    'ios': 'ca-app-pub-1967341918321288/4875437638', // Reemplaza con tu ID real
+        'ca-app-pub-3940256099942544/6300978111', // Reemplaza con tu ID real
+    'ios': 'ca-app-pub-3940256099942544/2934735716', // Reemplaza con tu ID real
   };
 
   Future<void> initialize() async {
