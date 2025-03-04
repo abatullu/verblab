@@ -12,6 +12,7 @@ class BannerAdContainer extends ConsumerStatefulWidget {
 }
 
 class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
+  // ignore: unused_field
   bool _hasTriedLoading = false;
   bool _isLoading = true;
   String? _errorMessage;
