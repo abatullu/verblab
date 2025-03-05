@@ -256,6 +256,9 @@ class _VerbSearchBarState extends ConsumerState<VerbSearchBar>
                   focusedErrorBorder: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
+                  filled: false, // Asegurarse de que no tenga fondo relleno
+                  fillColor:
+                      Colors.transparent, // Hacer transparente cualquier fondo
                   hintStyle: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant.withValues(
                       alpha: isDarkMode ? 0.5 : 0.6,

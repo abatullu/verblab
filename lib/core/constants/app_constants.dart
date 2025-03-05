@@ -27,7 +27,7 @@ class AppConstants {
   static const int minQueryLength = 1;
 
   /// Precio del producto premium
-  static const String premiumPrice = '4.99 USD';
+  static const String premiumPrice = '6.99 USD';
 
   /// ID de producto para compra premium
   static const String premiumProductId = 'verblab_premium';

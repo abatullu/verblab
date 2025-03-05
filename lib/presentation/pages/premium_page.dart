@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/monetization_providers.dart';
+// ignore: unused_import
 import '../../core/providers/user_preferences_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/monetization/premium_button.dart';
@@ -479,6 +480,7 @@ class _PremiumPageState extends ConsumerState<PremiumPage>
 
   /// Muestra el diálogo para restaurar compras
   void _showRestoreDialog(BuildContext context) {
+    // ignore: unused_local_variable
     final theme = Theme.of(context);
 
     showDialog(
