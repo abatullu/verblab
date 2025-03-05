@@ -92,6 +92,37 @@ class SettingsPage extends ConsumerWidget {
 
         SizedBox(height: VerbLabTheme.spacing['md']),
 
+        // Premium section
+        SettingsSection(
+          title: 'Premium',
+          children: [
+            ListTile(
+              title: Text(
+                'Upgrade to Premium',
+                style: theme.textTheme.bodyLarge,
+              ),
+              subtitle: Text(
+                'Remove ads and support development',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              leading: Icon(
+                Icons.workspace_premium,
+                color: theme.colorScheme.primary,
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios,
+                size: 16,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              onTap: () => context.pushNamed('premium'),
+            ),
+          ],
+        ),
+
+        SizedBox(height: VerbLabTheme.spacing['md']),
+
         // Reset section
         SettingsSection(
           title: 'Reset',

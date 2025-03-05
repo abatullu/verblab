@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart'; // Añadir este import
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
@@ -295,6 +296,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   /// Construye el indicador de carga con efectos visuales mejorados
   Widget _buildLoadingIndicator(ThemeData theme) {
+    // Añadir esta línea justo aquí:
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Column(
       children: [
         SizedBox(
@@ -312,6 +316,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
           'Loading verb database...',
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 40),
+        MaterialButton(
+          onPressed: () => GoRouter.of(context).pushNamed('premium'),
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
+            side: BorderSide(
+              color: theme.colorScheme.primary.withOpacity(0.3),
+              width: 1.5,
+            ),
+          ),
+          color: theme.colorScheme.primary.withOpacity(isDarkMode ? 0.15 : 0.1),
+          padding: EdgeInsets.symmetric(
+            horizontal: VerbLabTheme.spacing['md']!,
+            vertical: VerbLabTheme.spacing['sm']!,
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.workspace_premium,
+                size: 18,
+                color: theme.colorScheme.primary,
+              ),
+              SizedBox(width: VerbLabTheme.spacing['sm']),
+              Text(
+                'Try Premium',
+                style: theme.textTheme.labelLarge?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ),
       ],

@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:verblab/data/models/purchase_details_model.dart';
 import '../../../core/constants/app_constants.dart';
@@ -29,6 +30,13 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
     Future.microtask(() {
       ref.read(purchaseManagerProvider).initialize();
     });
+  }
+
+  bool _isOnPremiumPage() {
+    // Verificar si estamos en la página de premium
+    final state = GoRouterState.of(context);
+    final String currentPath = state.uri.toString(); // o state.matchedLocation
+    return currentPath.startsWith('/premium');
   }
 
   Future<void> _purchasePremium() async {
@@ -115,7 +123,7 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
       return Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          color: theme.colorScheme.primary.withOpacity(0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(Icons.stars, color: theme.colorScheme.primary, size: 20),
@@ -128,11 +136,9 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
         vertical: VerbLabTheme.spacing['xs']!,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.1),
+        color: theme.colorScheme.primary.withOpacity(0.1),
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
-        border: Border.all(
-          color: theme.colorScheme.primary.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -156,7 +162,7 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
         ? Container(
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
-            color: Colors.orange.withValues(alpha: 0.2),
+            color: Colors.orange.withOpacity(0.2),
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -188,7 +194,17 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
                   ),
                 )
                 : const Icon(Icons.workspace_premium),
-        onPressed: _isLoading ? null : _purchasePremium,
+        onPressed:
+            _isLoading
+                ? null
+                : () {
+                  // Si no estamos en la página premium, navegamos a ella
+                  if (!_isOnPremiumPage()) {
+                    context.pushNamed('premium');
+                  } else {
+                    _purchasePremium();
+                  }
+                },
         tooltip: 'Remove Ads',
       );
     }
@@ -212,6 +228,11 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
       style: FilledButton.styleFrom(
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
+        minimumSize: const Size(200, 48), // Hacer el botón más prominente
+        padding: EdgeInsets.symmetric(
+          horizontal: VerbLabTheme.spacing['lg']!,
+          vertical: VerbLabTheme.spacing['sm']!,
+        ),
       ),
     );
   }

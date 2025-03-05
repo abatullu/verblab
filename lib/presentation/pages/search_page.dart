@@ -154,7 +154,43 @@ class _SearchPageState extends ConsumerState<SearchPage>
                   // Botones de acción
                   Row(
                     children: [
-                      const PremiumButton(compact: true),
+                      MaterialButton(
+                        onPressed: () => context.pushNamed('premium'),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            VerbLabTheme.radius['full']!,
+                          ),
+                          side: BorderSide(
+                            color: theme.colorScheme.primary.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        color: theme.colorScheme.primary.withOpacity(
+                          isDarkMode ? 0.15 : 0.1,
+                        ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: VerbLabTheme.spacing['sm']!,
+                          vertical: VerbLabTheme.spacing['xxs']!,
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.workspace_premium,
+                              size: 16,
+                              color: theme.colorScheme.primary,
+                            ),
+                            SizedBox(width: VerbLabTheme.spacing['xs']),
+                            Text(
+                              'Premium',
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       // Settings button
                       IconButton(
                         icon: Icon(

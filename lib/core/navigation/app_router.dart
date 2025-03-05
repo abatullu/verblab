@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/pages/search_page.dart';
 import '../../presentation/pages/verb_detail_page.dart';
 import '../../presentation/pages/settings_page.dart';
+import '../../presentation/pages/premium_page.dart';
 import '../../core/providers/app_state_notifier.dart';
 import 'page_transitions.dart';
 
@@ -64,6 +65,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           );
         },
       ),
+
+      // Ruta para la página premium con transición desde abajo
+      GoRoute(
+        path: '/premium',
+        name: 'premium',
+        pageBuilder: (context, state) {
+          return BottomToTopTransitionPage(
+            key: state.pageKey,
+            child: const PremiumPage(),
+          );
+        },
+      ),
     ],
 
     // Redirecciones - Preparado para futuros flujos
@@ -110,3 +123,18 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
   );
 });
+
+/// Extensión con métodos helper para navegación
+extension GoRouterExtension on GoRouter {
+  /// Navega a la página de detalle de un verbo
+  void goToVerbDetail(String verbId) => go('/verb/$verbId');
+
+  /// Vuelve a la pantalla de búsqueda
+  void goToSearch() => go('/');
+
+  /// Navega a la pantalla de configuración
+  void goToSettings() => go('/settings');
+
+  /// Navega a la pantalla premium
+  void goToPremium() => go('/premium');
+}
