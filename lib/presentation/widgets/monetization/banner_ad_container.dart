@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../../core/providers/monetization_providers.dart';
+import '../../../data/datasources/ads/ad_manager.dart';
 
 class BannerAdContainer extends ConsumerStatefulWidget {
   const BannerAdContainer({super.key});
@@ -16,10 +17,13 @@ class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
   bool _hasTriedLoading = false;
   bool _isLoading = true;
   String? _errorMessage;
+  late final AdManager _adManager;
 
   @override
   void initState() {
     super.initState();
+    // Guardar referencia al AdManager durante initState
+    _adManager = ref.read(adManagerProvider);
     _loadAd();
   }
 
@@ -39,8 +43,7 @@ class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
     }
 
     try {
-      final adManager = ref.read(adManagerProvider);
-      await adManager.loadBannerAd();
+      await _adManager.loadBannerAd();
 
       if (mounted) {
         setState(() {
@@ -59,8 +62,13 @@ class _BannerAdContainerState extends ConsumerState<BannerAdContainer> {
 
   @override
   void dispose() {
-    final adManager = ref.read(adManagerProvider);
-    adManager.disposeBannerAd();
+    // Usar WidgetsBinding para retrasar la disposición hasta después
+    // de que el frame se haya completado
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Esto ocurrirá después de que el frame actual termine
+      _adManager.disposeBannerAd();
+    });
+
     super.dispose();
   }
 

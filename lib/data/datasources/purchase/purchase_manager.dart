@@ -16,19 +16,53 @@ class PurchaseManager {
   List<ProductDetails>? _products;
 
   bool _isAvailable = false;
-  bool get isAvailable => _isAvailable;
+  bool get isAvailable => _isAvailable || _testMode;
 
-  List<ProductDetails>? get products => _products;
+  List<ProductDetails>? get products => _testMode ? [_mockProduct] : _products;
+
+  // Nuevos atributos para modo de prueba
+  bool _testMode = kDebugMode; // Por defecto activado en debug
+  late ProductDetails _mockProduct;
 
   final _purchaseUpdatedController =
       StreamController<PurchaseDetailsModel>.broadcast();
   Stream<PurchaseDetailsModel> get onPurchaseUpdated =>
       _purchaseUpdatedController.stream;
 
-  PurchaseManager._internal();
+  PurchaseManager._internal() {
+    _mockProduct = _createMockProduct();
+  }
+
+  // Nuevo método para activar/desactivar modo de prueba
+  void setTestMode(bool enabled) {
+    _testMode = enabled;
+    debugPrint('Purchase Test Mode: ${_testMode ? 'ENABLED' : 'DISABLED'}');
+  }
+
+  // Nuevo método para crear producto ficticio
+  ProductDetails _createMockProduct() {
+    return ProductDetails(
+      id: AppConstants.premiumProductId,
+      title: 'VerbLab Premium (TEST)',
+      description: 'Remove ads and support development (TEST MODE)',
+      price: AppConstants.premiumPrice,
+      rawPrice: 6.99,
+      currencyCode: 'USD',
+      currencySymbol: '\$',
+    );
+  }
 
   Future<void> initialize() async {
     try {
+      // Si estamos en modo de prueba, simulamos que todo está disponible
+      if (_testMode) {
+        debugPrint('Initializing purchase manager in TEST MODE');
+        _isAvailable =
+            false; // Mantenemos esto en false para reflejar la realidad,
+        // pero isAvailable getter devolverá true si _testMode es true
+        return;
+      }
+
       _isAvailable = await _inAppPurchase.isAvailable();
 
       if (!_isAvailable) {
@@ -63,6 +97,12 @@ class PurchaseManager {
   }
 
   Future<void> loadProducts() async {
+    if (_testMode) {
+      debugPrint('Loading mock products in TEST MODE');
+      _products = [_mockProduct];
+      return;
+    }
+
     if (!_isAvailable) return;
 
     try {
@@ -99,6 +139,11 @@ class PurchaseManager {
   /// las preferencias del usuario y realmente solo verificará en tiempo real durante
   /// el proceso de restauración.
   Future<bool> verifyPurchases() async {
+    if (_testMode) {
+      debugPrint('TEST MODE: Skipping purchase verification');
+      return false;
+    }
+
     if (!_isAvailable) {
       debugPrint('Store not available for purchase verification');
       return false;
@@ -131,6 +176,24 @@ class PurchaseManager {
   }
 
   Future<bool> purchasePremium() async {
+    if (_testMode) {
+      debugPrint('Simulating premium purchase in TEST MODE');
+
+      // Simular un pequeño retraso para que se sienta real
+      await Future.delayed(const Duration(milliseconds: 1500));
+
+      // Enviar evento simulado de compra exitosa
+      _purchaseUpdatedController.add(
+        PurchaseDetailsModel(
+          status: PurchaseStatus.purchased,
+          productId: AppConstants.premiumProductId,
+          message: 'TEST MODE: Premium purchase successful!',
+        ),
+      );
+
+      return true;
+    }
+
     if (!_isAvailable || _products == null || _products!.isEmpty) {
       await initialize();
       if (!_isAvailable || _products == null || _products!.isEmpty) {
@@ -167,6 +230,24 @@ class PurchaseManager {
   }
 
   Future<bool> restorePurchases() async {
+    if (_testMode) {
+      debugPrint('Simulating purchase restoration in TEST MODE');
+
+      // Simular un pequeño retraso para que se sienta real
+      await Future.delayed(const Duration(milliseconds: 2000));
+
+      // Enviar evento simulado de restauración exitosa
+      _purchaseUpdatedController.add(
+        PurchaseDetailsModel(
+          status: PurchaseStatus.restored,
+          productId: AppConstants.premiumProductId,
+          message: 'TEST MODE: Premium purchase restored!',
+        ),
+      );
+
+      return true;
+    }
+
     if (!_isAvailable) {
       await initialize();
       if (!_isAvailable) {
@@ -274,4 +355,7 @@ class PurchaseManager {
     _subscription?.cancel();
     _purchaseUpdatedController.close();
   }
+
+  // Método para verificar si estamos en modo de prueba (para UI)
+  bool isTestModeActive() => _testMode;
 }

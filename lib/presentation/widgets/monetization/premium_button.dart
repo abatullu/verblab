@@ -63,6 +63,7 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
     final theme = Theme.of(context);
     final isPremium = ref.watch(isPremiumProvider);
     final storeAvailable = ref.watch(storeAvailableProvider);
+    final isTestMode = ref.watch(purchaseTestModeProvider);
 
     // Mover la escucha del provider a build
     ref.listen<AsyncValue<PurchaseDetailsModel>>(purchaseUpdatesProvider, (
@@ -103,10 +104,10 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
     // Error en tienda
     return storeAvailable.when(
       data: (isAvailable) {
-        if (!isAvailable) {
+        if (!isAvailable && !isTestMode) {
           return _buildErrorState();
         }
-        return _buildPurchaseButton(theme);
+        return _buildPurchaseButton(theme, isTestMode);
       },
       loading:
           () => const SizedBox(
@@ -178,62 +179,96 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
         );
   }
 
-  Widget _buildPurchaseButton(ThemeData theme) {
+  Widget _buildPurchaseButton(ThemeData theme, bool isTestMode) {
     if (widget.compact) {
-      return IconButton(
-        icon:
-            _isLoading
-                ? SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      theme.colorScheme.primary,
-                    ),
-                  ),
-                )
-                : const Icon(Icons.workspace_premium),
-        onPressed:
-            _isLoading
-                ? null
-                : () {
-                  // Si no estamos en la página premium, navegamos a ella
-                  if (!_isOnPremiumPage()) {
-                    context.pushNamed('premium');
-                  } else {
-                    _purchasePremium();
-                  }
-                },
-        tooltip: 'Remove Ads',
+      return Stack(
+        children: [
+          IconButton(
+            icon:
+                _isLoading
+                    ? SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary,
+                        ),
+                      ),
+                    )
+                    : const Icon(Icons.workspace_premium),
+            onPressed:
+                _isLoading
+                    ? null
+                    : () {
+                      // Si no estamos en la página premium, navegamos a ella
+                      if (!_isOnPremiumPage()) {
+                        context.pushNamed('premium');
+                      } else {
+                        _purchasePremium();
+                      }
+                    },
+            tooltip: 'Remove Ads',
+          ),
+          if (isTestMode)
+            Positioned(
+              right: 0,
+              top: 0,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                width: 8,
+                height: 8,
+              ),
+            ),
+        ],
       );
     }
 
-    return FilledButton.icon(
-      onPressed: _isLoading ? null : _purchasePremium,
-      icon:
-          _isLoading
-              ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    theme.colorScheme.onPrimary,
-                  ),
-                ),
-              )
-              : const Icon(Icons.workspace_premium),
-      label: Text('Remove Ads (${AppConstants.premiumPrice})'),
-      style: FilledButton.styleFrom(
-        backgroundColor: theme.colorScheme.primary,
-        foregroundColor: theme.colorScheme.onPrimary,
-        minimumSize: const Size(200, 48), // Hacer el botón más prominente
-        padding: EdgeInsets.symmetric(
-          horizontal: VerbLabTheme.spacing['lg']!,
-          vertical: VerbLabTheme.spacing['sm']!,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FilledButton.icon(
+          onPressed: _isLoading ? null : _purchasePremium,
+          icon:
+              _isLoading
+                  ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.onPrimary,
+                      ),
+                    ),
+                  )
+                  : const Icon(Icons.workspace_premium),
+          label: Text('Remove Ads (${AppConstants.premiumPrice})'),
+          style: FilledButton.styleFrom(
+            backgroundColor: theme.colorScheme.primary,
+            foregroundColor: theme.colorScheme.onPrimary,
+            minimumSize: const Size(200, 48), // Hacer el botón más prominente
+            padding: EdgeInsets.symmetric(
+              horizontal: VerbLabTheme.spacing['lg']!,
+              vertical: VerbLabTheme.spacing['sm']!,
+            ),
+          ),
         ),
-      ),
+        if (isTestMode)
+          Padding(
+            padding: EdgeInsets.only(top: VerbLabTheme.spacing['xs']!),
+            child: Text(
+              'TEST MODE',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 // lib/core/providers/monetization_providers.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../data/datasources/ads/ad_manager.dart';
@@ -40,4 +41,23 @@ final productsProvider = FutureProvider<List<ProductDetails>?>((ref) async {
   final purchaseManager = ref.watch(purchaseManagerProvider);
   await purchaseManager.initialize();
   return purchaseManager.products;
+});
+
+// Nuevo provider para estado del modo de prueba
+final purchaseTestModeProvider = StateProvider<bool>((ref) {
+  // Leer el estado inicial del PurchaseManager
+  final purchaseManager = ref.read(purchaseManagerProvider);
+  return purchaseManager.isTestModeActive();
+});
+
+// Método para cambiar el modo de prueba
+final togglePurchaseTestModeProvider = Provider<Function(bool)>((ref) {
+  return (bool enabled) {
+    // Actualizar el estado en PurchaseManager
+    final purchaseManager = ref.read(purchaseManagerProvider);
+    purchaseManager.setTestMode(enabled);
+
+    // Actualizar el estado del provider
+    ref.read(purchaseTestModeProvider.notifier).state = enabled;
+  };
 });

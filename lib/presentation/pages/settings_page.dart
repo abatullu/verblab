@@ -1,4 +1,5 @@
 // lib/presentation/pages/settings_page.dart
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:verblab/domain/models/user_preferences.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/user_preferences_provider.dart';
+import '../../core/providers/monetization_providers.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/settings/settings_section.dart';
 import '../widgets/settings/settings_switch_tile.dart';
@@ -118,6 +120,18 @@ class SettingsPage extends ConsumerWidget {
               ),
               onTap: () => context.pushNamed('premium'),
             ),
+            // Opción para el modo de prueba (solo visible en modo debug)
+            if (kDebugMode)
+              SettingsSwitchTile(
+                title: 'Purchase Test Mode',
+                subtitle: 'Simulate purchases without real store',
+                value: ref.watch(purchaseTestModeProvider),
+                onChanged: (value) {
+                  HapticFeedback.lightImpact();
+                  ref.read(togglePurchaseTestModeProvider)(value);
+                },
+                icon: Icons.bug_report,
+              ),
           ],
         ),
 
