@@ -1,5 +1,4 @@
 // lib/core/providers/monetization_providers.dart
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../data/datasources/ads/ad_manager.dart';
