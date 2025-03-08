@@ -49,7 +49,20 @@ class UserPreferencesNotifier
   }
 
   Future<void> resetToDefaults() async {
-    final defaults = UserPreferences.defaults();
+    // Preservar estado premium mientras se restablecen otras preferencias
+    bool currentPremiumStatus = false;
+
+    // Capturar el estado premium actual
+    state.whenData((preferences) {
+      currentPremiumStatus = preferences.isPremium;
+    });
+
+    // Crear objeto de preferencias por defecto manteniendo el estado premium
+    final defaults = UserPreferences.defaults().copyWith(
+      isPremium: currentPremiumStatus, // Preservar estado premium
+    );
+
+    // Guardar las preferencias
     await _preferencesService.savePreferences(defaults);
     state = AsyncValue.data(defaults);
   }
