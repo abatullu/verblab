@@ -120,71 +120,71 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
   }
 
   Widget _buildPremiumBadge(ThemeData theme) {
-    // Determinar si debemos usar colores más vibrantes
+    // Determinar si estamos en modo oscuro
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    // Color más distintivo para el badge premium
-    final premiumGold =
+    // Color premium más sutil y sofisticado:
+    // - En modo oscuro: Un tono dorado más suave con menor opacidad
+    // - En modo claro: Un tono dorado más apagado con mayor contraste
+    final premiumColor =
         isDarkMode
-            ? const Color(0xFFFFD700).withOpacity(
-              0.8,
-            ) // Gold con ligera transparencia para dark mode
-            : const Color(0xFFFFD700); // Gold sólido para light mode
+            ? const Color(0xFFDFC777).withOpacity(
+              0.9,
+            ) // Dorado suave para oscuro
+            : const Color(0xFFB09445); // Dorado apagado para claro
 
-    // Color de fondo para el badge
+    // Color de fondo mucho más sutil (apenas visible)
     final backgroundColor =
         isDarkMode
-            ? premiumGold.withOpacity(0.15)
-            : premiumGold.withOpacity(0.1);
+            ? premiumColor.withOpacity(0.08) // Menos opacidad en modo oscuro
+            : premiumColor.withOpacity(0.05); // Muy sutil en modo claro
 
     if (widget.compact) {
+      // Versión compacta mucho más discreta
       return Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: Colors.transparent, // Sin color de fondo
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: premiumGold.withOpacity(0.3),
-              blurRadius: 8,
-              spreadRadius: 0,
-            ),
-          ],
         ),
-        child: Icon(Icons.stars, color: premiumGold, size: 20),
+        child: Tooltip(
+          message: 'Premium Active',
+          child: Icon(
+            Icons.workspace_premium,
+            color: premiumColor,
+            size: 22, // Ligeramente más pequeño
+          ),
+        ),
       );
     }
 
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: VerbLabTheme.spacing['md']!,
-        vertical: VerbLabTheme.spacing['xs']!,
-      ),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
-        border: Border.all(color: premiumGold.withOpacity(0.5), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: premiumGold.withOpacity(0.2),
-            blurRadius: 6,
-            spreadRadius: 0,
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.stars, size: 16, color: premiumGold),
-          SizedBox(width: VerbLabTheme.spacing['xs']),
-          Text(
-            'Premium',
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: premiumGold,
-              fontWeight: FontWeight.bold,
+    // Versión expandida más sutil y elegante - ahora centrada
+    return Center(
+      child: Container(
+        padding: EdgeInsets.symmetric(
+          horizontal: VerbLabTheme.spacing['md']!,
+          vertical: VerbLabTheme.spacing['xxs']!,
+        ),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
+          border: Border.all(color: premiumColor.withOpacity(0.3), width: 1.0),
+          // Sin sombra para un look más minimalista
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.workspace_premium, size: 14, color: premiumColor),
+            SizedBox(width: VerbLabTheme.spacing['xs']),
+            Text(
+              'Premium',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: premiumColor,
+                fontWeight: FontWeight.w500, // Menos negrita
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
