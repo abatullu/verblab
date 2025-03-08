@@ -1,9 +1,13 @@
 // lib/core/providers/app_state_notifier.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
+import '../../core/constants/app_constants.dart';
+import '../../data/models/purchase_details_model.dart';
 import '../../domain/models/app_state.dart';
 import '../../domain/models/tts_state.dart';
 import 'monetization_providers.dart';
+import 'premium_status_provider.dart';
 import 'usecase_providers.dart';
 import 'user_preferences_provider.dart';
 
@@ -51,9 +55,44 @@ class AppStateNotifier extends StateNotifier<AppState> {
       prefsAsync.whenData((prefs) {
         if (prefs.isPremium) {
           debugPrint('Premium status loaded from preferences: Active');
+
+          // Asegurarse de que el estado premium esté actualizado en todos los providers
+          if (_ref.read(isPremiumProvider)) {
+            // Actualizar el notificador de estado premium
+            if (_ref.exists(premiumStatusNotifierProvider)) {
+              _ref
+                  .read(premiumStatusNotifierProvider.notifier)
+                  .updatePremiumStatus(true);
+            }
+          }
         } else {
           debugPrint('Premium status loaded from preferences: Inactive');
         }
+      });
+
+      // Configurar listener para cambios en compras premium
+      _ref.listen<AsyncValue<PurchaseDetailsModel>>(purchaseUpdatesProvider, (
+        _,
+        next,
+      ) {
+        next.whenData((purchaseDetails) {
+          // Si la compra fue exitosa, actualizar preferencias
+          if ((purchaseDetails.status == PurchaseStatus.purchased ||
+                  purchaseDetails.status == PurchaseStatus.restored) &&
+              purchaseDetails.productId == AppConstants.premiumProductId) {
+            // Actualizar preferencias de usuario para marcar premium
+            _ref
+                .read(userPreferencesNotifierProvider.notifier)
+                .setPremiumStatus(true);
+
+            // Actualizar el notificador de estado premium si existe
+            if (_ref.exists(premiumStatusNotifierProvider)) {
+              _ref
+                  .read(premiumStatusNotifierProvider.notifier)
+                  .updatePremiumStatus(true);
+            }
+          }
+        });
       });
 
       // Actualizar el estado

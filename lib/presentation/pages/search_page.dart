@@ -5,12 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/app_state_notifier.dart';
 import '../../core/providers/monetization_providers.dart';
+// ignore: unused_import
+import '../../core/providers/premium_celebration_manager.dart';
 import '../widgets/search/search_bar.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_card.dart';
 import '../widgets/monetization/banner_ad_container.dart';
-// ignore: unused_import
 import '../widgets/monetization/premium_button.dart';
 
 /// Pantalla principal de búsqueda de verbos.
@@ -144,54 +145,24 @@ class _SearchPageState extends ConsumerState<SearchPage>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'VerbLab',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
+                  // Título con flex para reducir espacio si es necesario
+                  Flexible(
+                    child: Text(
+                      'VerbLab',
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.5,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // Botones de acción
+                  // Botones de acción con espacio entre ellos
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      MaterialButton(
-                        onPressed: () => context.pushNamed('premium'),
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(
-                            VerbLabTheme.radius['full']!,
-                          ),
-                          side: BorderSide(
-                            color: theme.colorScheme.primary.withOpacity(0.3),
-                            width: 1.5,
-                          ),
-                        ),
-                        color: theme.colorScheme.primary.withOpacity(
-                          isDarkMode ? 0.15 : 0.1,
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: VerbLabTheme.spacing['sm']!,
-                          vertical: VerbLabTheme.spacing['xxs']!,
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.workspace_premium,
-                              size: 16,
-                              color: theme.colorScheme.primary,
-                            ),
-                            SizedBox(width: VerbLabTheme.spacing['xs']),
-                            Text(
-                              'Premium',
-                              style: theme.textTheme.labelMedium?.copyWith(
-                                color: theme.colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // Versión compacta del PremiumButton para ahorrar espacio
+                      const PremiumButton(compact: true),
                       // Settings button
                       IconButton(
                         icon: Icon(

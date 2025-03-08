@@ -120,14 +120,38 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
   }
 
   Widget _buildPremiumBadge(ThemeData theme) {
+    // Determinar si debemos usar colores más vibrantes
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Color más distintivo para el badge premium
+    final premiumGold =
+        isDarkMode
+            ? const Color(0xFFFFD700).withOpacity(
+              0.8,
+            ) // Gold con ligera transparencia para dark mode
+            : const Color(0xFFFFD700); // Gold sólido para light mode
+
+    // Color de fondo para el badge
+    final backgroundColor =
+        isDarkMode
+            ? premiumGold.withOpacity(0.15)
+            : premiumGold.withOpacity(0.1);
+
     if (widget.compact) {
       return Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withOpacity(0.1),
+          color: backgroundColor,
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: premiumGold.withOpacity(0.3),
+              blurRadius: 8,
+              spreadRadius: 0,
+            ),
+          ],
         ),
-        child: Icon(Icons.stars, color: theme.colorScheme.primary, size: 20),
+        child: Icon(Icons.stars, color: premiumGold, size: 20),
       );
     }
 
@@ -137,19 +161,26 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
         vertical: VerbLabTheme.spacing['xs']!,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withOpacity(0.1),
+        color: backgroundColor,
         borderRadius: BorderRadius.circular(VerbLabTheme.radius['full']!),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.3)),
+        border: Border.all(color: premiumGold.withOpacity(0.5), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: premiumGold.withOpacity(0.2),
+            blurRadius: 6,
+            spreadRadius: 0,
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.stars, size: 16, color: theme.colorScheme.primary),
+          Icon(Icons.stars, size: 16, color: premiumGold),
           SizedBox(width: VerbLabTheme.spacing['xs']),
           Text(
             'Premium',
             style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.primary,
+              color: premiumGold,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -181,9 +212,54 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
 
   Widget _buildPurchaseButton(ThemeData theme, bool isTestMode) {
     if (widget.compact) {
-      return Stack(
-        children: [
-          IconButton(
+      return isTestMode
+          ? Tooltip(
+            message: 'Test Mode Active',
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  icon:
+                      _isLoading
+                          ? SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                theme.colorScheme.primary,
+                              ),
+                            ),
+                          )
+                          : const Icon(Icons.workspace_premium),
+                  onPressed:
+                      _isLoading
+                          ? null
+                          : () {
+                            if (!_isOnPremiumPage()) {
+                              context.pushNamed('premium');
+                            } else {
+                              _purchasePremium();
+                            }
+                          },
+                  tooltip: 'Remove Ads',
+                ),
+                Positioned(
+                  right: 0,
+                  top: 0,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          )
+          : IconButton(
             icon:
                 _isLoading
                     ? SizedBox(
@@ -201,7 +277,6 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
                 _isLoading
                     ? null
                     : () {
-                      // Si no estamos en la página premium, navegamos a ella
                       if (!_isOnPremiumPage()) {
                         context.pushNamed('premium');
                       } else {
@@ -209,23 +284,7 @@ class _PremiumButtonState extends ConsumerState<PremiumButton> {
                       }
                     },
             tooltip: 'Remove Ads',
-          ),
-          if (isTestMode)
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
-                padding: const EdgeInsets.all(2),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                width: 8,
-                height: 8,
-              ),
-            ),
-        ],
-      );
+          );
     }
 
     return Column(

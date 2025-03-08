@@ -2,11 +2,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/monetization_providers.dart';
 // ignore: unused_import
 import '../../core/providers/user_preferences_provider.dart';
+import '../../core/providers/premium_celebration_manager.dart';
+import '../../data/models/purchase_details_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../widgets/monetization/premium_button.dart';
 
@@ -76,6 +79,25 @@ class _PremiumPageState extends ConsumerState<PremiumPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+
+    // Escuchar actualizaciones de compra para mostrar la celebración
+    ref.listen<AsyncValue<PurchaseDetailsModel>>(purchaseUpdatesProvider, (
+      _,
+      next,
+    ) {
+      next.whenData((purchaseDetails) {
+        // Si la compra fue exitosa (purchased o restored), mostrar la celebración
+        if (purchaseDetails.status == PurchaseStatus.purchased ||
+            purchaseDetails.status == PurchaseStatus.restored) {
+          if (purchaseDetails.productId == AppConstants.premiumProductId) {
+            // Mostrar celebración
+            ref
+                .read(premiumCelebrationManagerProvider)
+                .showPremiumCelebration(context);
+          }
+        }
+      });
+    });
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
@@ -475,8 +497,6 @@ class _PremiumPageState extends ConsumerState<PremiumPage>
       ),
     );
   }
-
-
 
   /// Muestra el diálogo para restaurar compras
   void _showRestoreDialog(BuildContext context) {
