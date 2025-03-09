@@ -364,6 +364,10 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
     final spans = <TextSpan>[];
     String remainingText = example;
 
+    // Ordenar las formas verbales por longitud (de más larga a más corta)
+    final sortedVerbForms = List<String>.from(verbForms)
+      ..sort((a, b) => b.length.compareTo(a.length));
+
     // Color para el texto normal según tema
     final normalTextColor =
         isDarkMode
@@ -374,7 +378,7 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
     while (remainingText.isNotEmpty) {
       bool found = false;
 
-      for (final verbForm in verbForms) {
+      for (final verbForm in sortedVerbForms) {
         if (verbForm.isEmpty) continue;
 
         final lowercaseRemaining = remainingText.toLowerCase();
@@ -382,6 +386,10 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
 
         if (lowercaseRemaining.contains(lowercaseForm)) {
           final index = lowercaseRemaining.indexOf(lowercaseForm);
+
+          // Verificar si es una palabra completa
+          if (!_isWholeWord(lowercaseRemaining, lowercaseForm, index)) continue;
+
           final endIndex = index + verbForm.length;
 
           // Añadir texto antes de la forma verbal
@@ -441,6 +449,19 @@ class _ContextualUsageSectionState extends State<ContextualUsageSection> {
     }
 
     return TextSpan(children: spans);
+  }
+
+  // Función auxiliar para verificar si es una palabra completa
+  bool _isWholeWord(String text, String word, int startIndex) {
+    final isStart = startIndex == 0 || !_isLetter(text[startIndex - 1]);
+    final isEnd =
+        startIndex + word.length == text.length ||
+        !_isLetter(text[startIndex + word.length]);
+    return isStart && isEnd;
+  }
+
+  bool _isLetter(String char) {
+    return RegExp(r'[a-zA-Z]').hasMatch(char);
   }
 
   /// Trunca un texto con puntos suspensivos si supera cierta longitud
