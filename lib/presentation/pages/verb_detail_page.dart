@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/themes/app_theme.dart';
 import '../../core/providers/app_state_notifier.dart';
+import '../../core/providers/monetization_providers.dart';
 import '../widgets/common/error_view.dart';
 import '../widgets/common/shimmer_loading.dart';
 import '../widgets/verb/verb_forms.dart';
 import '../widgets/verb/contextual_usage_section.dart';
+import '../widgets/monetization/detail_banner_ad_card.dart';
 
 /// Página de detalle que muestra toda la información de un verbo.
 ///
@@ -165,6 +167,12 @@ class VerbDetailPage extends ConsumerWidget {
           ),
 
           SizedBox(height: VerbLabTheme.spacing['lg']),
+
+          // Insertar banner entre secciones (solo si no es premium)
+          if (ref.watch(showAdsProvider)) const DetailBannerAdCard(),
+
+          if (ref.watch(showAdsProvider))
+            SizedBox(height: VerbLabTheme.spacing['lg']),
 
           // Tarjeta de significado
           if (selectedVerb.meaning.isNotEmpty)
