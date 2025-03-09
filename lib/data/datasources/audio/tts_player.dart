@@ -115,9 +115,20 @@ class TTSPlayer {
 
   /// Preprocesa el texto para mejorar la pronunciación
   ///
-  /// Algunos verbos pueden tener pronunciaciones ambiguas,
+  /// Algunos verbos pueden tener pronunciaciones ambiguas o múltiples formas,
   /// este método aplica reglas específicas para mejorarlas.
   String _preprocessText(String text) {
+    // Convertir formato de alternativas para TTS
+    String textToSpeak = text;
+
+    if (text.contains('/')) {
+      // Convertir "dreamed/dreamt" a "dreamed, or dreamt"
+      final forms = text.split('/');
+      textToSpeak = forms.join(
+        ', or ',
+      ); // Añade "or" entre formas para naturalidad
+    }
+
     // Mapa de procesamiento para casos especiales
     final pronunciationMap = {
       'read': 'read.', // Para distinguir entre presente y pasado
@@ -135,7 +146,7 @@ class TTSPlayer {
     };
 
     // Aplicar reglas específicas o retornar con punto final
-    return pronunciationMap[text.toLowerCase()] ?? '$text.';
+    return pronunciationMap[textToSpeak.toLowerCase()] ?? '$textToSpeak.';
   }
 
   /// Detiene cualquier pronunciación en curso

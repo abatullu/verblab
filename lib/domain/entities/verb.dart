@@ -93,15 +93,27 @@ class Verb extends Equatable {
           participleUK != participleUS);
 
   /// Obtiene todas las formas del verbo como una lista
-  List<String> get allForms => [
-    base,
-    past,
-    participle,
-    if (pastUK.isNotEmpty) pastUK,
-    if (pastUS.isNotEmpty) pastUS,
-    if (participleUK.isNotEmpty) participleUK,
-    if (participleUS.isNotEmpty) participleUS,
-  ];
+  List<String> get allForms {
+    // Función para dividir formas múltiples
+    List<String> splitForms(String form) {
+      return form.isEmpty ? [] : form.split('/').map((f) => f.trim()).toList();
+    }
+
+    // Recopilar todas las formas, dividiendo las que tienen alternativas
+    final forms = <String>[];
+
+    forms.add(base);
+    forms.addAll(splitForms(past));
+    forms.addAll(splitForms(participle));
+
+    if (pastUK.isNotEmpty) forms.addAll(splitForms(pastUK));
+    if (pastUS.isNotEmpty) forms.addAll(splitForms(pastUS));
+    if (participleUK.isNotEmpty) forms.addAll(splitForms(participleUK));
+    if (participleUS.isNotEmpty) forms.addAll(splitForms(participleUS));
+
+    // Eliminar duplicados que puedan surgir de formas compartidas
+    return forms.toSet().toList();
+  }
 
   /// Verifica si el verbo coincide con una consulta de búsqueda
   bool matchesSearch(String query) {
