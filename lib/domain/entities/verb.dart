@@ -1,11 +1,12 @@
 // lib/domain/entities/verb.dart
 import 'package:equatable/equatable.dart';
+import '../models/verb_meaning.dart';
 
 /// Entidad principal que representa un verbo irregular en inglés.
 ///
 /// Esta clase es inmutable y contiene todas las propiedades relevantes
 /// para representar un verbo irregular, incluyendo sus formas en diferentes
-/// tiempos verbales y variantes dialectales (US/UK).
+/// tiempos verbales, variantes dialectales (US/UK) y acepciones.
 class Verb extends Equatable {
   /// Identificador único del verbo
   final String id;
@@ -35,22 +36,14 @@ class Verb extends Equatable {
   /// Si está vacía, se usa [participle]
   final String participleUS;
 
-  /// Significado principal del verbo
-  final String meaning;
-
   /// Texto de pronunciación fonética (US)
   final String? pronunciationTextUS;
 
   /// Texto de pronunciación fonética (UK)
   final String? pronunciationTextUK;
 
-  /// Mapa de usos contextuales
-  /// Clave: contexto (ej. "movimiento", "posesión")
-  /// Valor: descripción del uso en ese contexto
-  final Map<String, String>? contextualUsage;
-
-  /// Lista de ejemplos de uso del verbo
-  final List<String>? examples;
+  /// Lista de acepciones del verbo
+  final List<VerbMeaning> meanings;
 
   /// Constructor principal que crea una instancia de [Verb]
   const Verb({
@@ -62,11 +55,9 @@ class Verb extends Equatable {
     this.pastUS = '',
     this.participleUK = '',
     this.participleUS = '',
-    required this.meaning,
     this.pronunciationTextUS,
     this.pronunciationTextUK,
-    this.contextualUsage,
-    this.examples,
+    required this.meanings,
   });
 
   /// Helper para obtener el pasado según el dialecto especificado
@@ -119,7 +110,8 @@ class Verb extends Equatable {
   bool matchesSearch(String query) {
     final normalized = query.toLowerCase().trim();
 
-    return base.toLowerCase().contains(normalized) ||
+    // Búsqueda en formas verbales
+    if (base.toLowerCase().contains(normalized) ||
         past.toLowerCase().contains(normalized) ||
         participle.toLowerCase().contains(normalized) ||
         (pastUK.isNotEmpty && pastUK.toLowerCase().contains(normalized)) ||
@@ -127,8 +119,26 @@ class Verb extends Equatable {
         (participleUK.isNotEmpty &&
             participleUK.toLowerCase().contains(normalized)) ||
         (participleUS.isNotEmpty &&
-            participleUS.toLowerCase().contains(normalized)) ||
-        meaning.toLowerCase().contains(normalized);
+            participleUS.toLowerCase().contains(normalized))) {
+      return true;
+    }
+
+    // Búsqueda en acepciones
+    for (final meaning in meanings) {
+      if (meaning.definition.toLowerCase().contains(normalized)) {
+        return true;
+      }
+
+      // Búsqueda en usos contextuales
+      for (final usage in meaning.contextualUsages) {
+        if (usage.context.toLowerCase().contains(normalized) ||
+            usage.description.toLowerCase().contains(normalized)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   }
 
   @override
@@ -141,11 +151,9 @@ class Verb extends Equatable {
     pastUS,
     participleUK,
     participleUS,
-    meaning,
     pronunciationTextUS,
     pronunciationTextUK,
-    // Nota: No incluimos contextualUsage y examples en props para comparaciones
-    // ya que son objetos complejos y podrían causar comparaciones innecesariamente complejas
+    meanings,
   ];
 
   @override
@@ -162,11 +170,9 @@ class Verb extends Equatable {
     String? pastUS,
     String? participleUK,
     String? participleUS,
-    String? meaning,
     String? pronunciationTextUS,
     String? pronunciationTextUK,
-    Map<String, String>? contextualUsage,
-    List<String>? examples,
+    List<VerbMeaning>? meanings,
   }) {
     return Verb(
       id: id ?? this.id,
@@ -177,11 +183,9 @@ class Verb extends Equatable {
       pastUS: pastUS ?? this.pastUS,
       participleUK: participleUK ?? this.participleUK,
       participleUS: participleUS ?? this.participleUS,
-      meaning: meaning ?? this.meaning,
       pronunciationTextUS: pronunciationTextUS ?? this.pronunciationTextUS,
       pronunciationTextUK: pronunciationTextUK ?? this.pronunciationTextUK,
-      contextualUsage: contextualUsage ?? this.contextualUsage,
-      examples: examples ?? this.examples,
+      meanings: meanings ?? this.meanings,
     );
   }
 }

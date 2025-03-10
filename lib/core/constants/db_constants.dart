@@ -30,6 +30,9 @@ class DBConstants {
   static const String colExamples = 'examples';
   static const String colSearchTerms = 'search_terms';
 
+  /// Nueva columna para almacenar múltiples acepciones
+  static const String colMeanings = 'meanings';
+
   /// Queries para la creación de la base de datos
   static const String createVerbsTableQuery = '''
     CREATE TABLE $verbsTable (
@@ -46,6 +49,7 @@ class DBConstants {
       $colPronunciationTextUK TEXT,
       $colContextualUsage TEXT,
       $colExamples TEXT,
+      $colMeanings TEXT,
       $colSearchTerms TEXT,
       UNIQUE($colBase, $colPast, $colParticiple)
     )

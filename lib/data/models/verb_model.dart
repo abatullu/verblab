@@ -1,6 +1,8 @@
 // lib/data/models/verb_model.dart
 import 'dart:convert';
 import '../../domain/entities/verb.dart';
+import '../../domain/models/verb_meaning.dart';
+import '../../domain/models/contextual_usage.dart';
 import '../../core/constants/db_constants.dart';
 
 /// Modelo de datos para representar un verbo en la capa de datos.
@@ -33,20 +35,14 @@ class VerbModel {
   /// Forma de participio en inglés americano
   final String participleUS;
 
-  /// Significado principal del verbo
-  final String meaning;
-
   /// Texto de pronunciación fonética (US)
   final String? pronunciationTextUS;
 
   /// Texto de pronunciación fonética (UK)
   final String? pronunciationTextUK;
 
-  /// Mapa de usos contextuales
-  final Map<String, String>? contextualUsage;
-
-  /// Lista de ejemplos de uso del verbo
-  final List<String>? examples;
+  /// Lista de acepciones del verbo
+  final List<VerbMeaning> meanings;
 
   /// Constructor principal
   const VerbModel({
@@ -58,40 +54,61 @@ class VerbModel {
     this.pastUS = '',
     this.participleUK = '',
     this.participleUS = '',
-    required this.meaning,
     this.pronunciationTextUS,
     this.pronunciationTextUK,
-    this.contextualUsage,
-    this.examples,
+    required this.meanings,
   });
 
   /// Crea un VerbModel desde un mapa obtenido de la base de datos
   factory VerbModel.fromDatabase(Map<String, dynamic> data) {
-    // Manejo seguro de JSON para campos opcionales
-    Map<String, String>? contextualUsage;
-    if (data[DBConstants.colContextualUsage] != null) {
+    // Procesar acepciones desde la nueva columna
+    List<VerbMeaning> meanings = [];
+    if (data[DBConstants.colMeanings] != null) {
       try {
-        final Map<String, dynamic> jsonMap = json.decode(
-          data[DBConstants.colContextualUsage] as String,
+        final List<dynamic> jsonList = json.decode(
+          data[DBConstants.colMeanings] as String,
         );
-        contextualUsage = Map<String, String>.from(jsonMap);
+        meanings = jsonList
+            .map((item) => VerbMeaning.fromJson(item as Map<String, dynamic>))
+            .toList();
       } catch (e) {
-        // Si hay un error en el parsing, dejamos como null
-        contextualUsage = null;
+        // Si hay un error en el parsing, dejamos como lista vacía
+        meanings = [];
       }
     }
 
-    List<String>? examples;
-    if (data[DBConstants.colExamples] != null) {
-      try {
-        final List<dynamic> jsonList = json.decode(
-          data[DBConstants.colExamples] as String,
-        );
-        examples = List<String>.from(jsonList);
-      } catch (e) {
-        // Si hay un error en el parsing, dejamos como null
-        examples = null;
+    // Si no hay acepciones en el nuevo formato, convertir desde formato antiguo
+    if (meanings.isEmpty) {
+      final oldMeaning = data[DBConstants.colMeaning] as String? ?? '';
+      Map<String, dynamic>? oldContextualUsage;
+      
+      if (data[DBConstants.colContextualUsage] != null) {
+        try {
+          final contextualUsageJson = data[DBConstants.colContextualUsage] as String;
+          if (contextualUsageJson.isNotEmpty) {
+            oldContextualUsage = json.decode(contextualUsageJson) as Map<String, dynamic>;
+          }
+        } catch (e) {
+          // Si hay un error en el parsing, dejamos como null
+          oldContextualUsage = null;
+        }
       }
+      
+      List<String>? oldExamples;
+      if (data[DBConstants.colExamples] != null) {
+        try {
+          final examplesJson = data[DBConstants.colExamples] as String;
+          if (examplesJson.isNotEmpty) {
+            oldExamples = List<String>.from(json.decode(examplesJson) as List);
+          }
+        } catch (e) {
+          // Si hay un error en el parsing, dejamos como null
+          oldExamples = null;
+        }
+      }
+
+      // Migrar al nuevo formato
+      meanings = _migrateToMeanings(oldMeaning, oldContextualUsage, oldExamples);
     }
 
     return VerbModel(
@@ -103,16 +120,114 @@ class VerbModel {
       pastUS: data[DBConstants.colPastUS] as String? ?? '',
       participleUK: data[DBConstants.colParticipleUK] as String? ?? '',
       participleUS: data[DBConstants.colParticipleUS] as String? ?? '',
-      meaning: data[DBConstants.colMeaning] as String,
       pronunciationTextUS: data[DBConstants.colPronunciationTextUS] as String?,
       pronunciationTextUK: data[DBConstants.colPronunciationTextUK] as String?,
-      contextualUsage: contextualUsage,
-      examples: examples,
+      meanings: meanings,
     );
+  }
+
+  /// Migra los datos del formato antiguo al nuevo formato de acepciones
+  static List<VerbMeaning> _migrateToMeanings(
+    String oldMeaning,
+    Map<String, dynamic>? oldContextualUsage,
+    List<String>? oldExamples,
+  ) {
+    // Crear la acepción principal con el significado general
+    final contextualUsages = <ContextualUsage>[];
+    final remainingExamples = <String>[];
+    
+    // Si hay ejemplos antiguos, hacer una copia para trabajar con ellos
+    final workingExamples = oldExamples != null ? List<String>.from(oldExamples) : <String>[];
+
+    // Convertir los usos contextuales antiguos a la nueva estructura
+    if (oldContextualUsage != null && oldContextualUsage.isNotEmpty) {
+      final int examplesPerContext = workingExamples.isNotEmpty 
+          ? (workingExamples.length / oldContextualUsage.length).floor()
+          : 0;
+
+      int exampleIndex = 0;
+      final usedExamples = <String>{};
+
+      oldContextualUsage.forEach((context, description) {
+        final List<String> contextExamples = [];
+
+        // Asignar ejemplos a este contexto si hay disponibles
+        if (examplesPerContext > 0 && exampleIndex < workingExamples.length) {
+          for (int i = 0; i < examplesPerContext && exampleIndex < workingExamples.length; i++) {
+            contextExamples.add(workingExamples[exampleIndex]);
+            usedExamples.add(workingExamples[exampleIndex]);
+            exampleIndex++;
+          }
+        }
+
+        contextualUsages.add(ContextualUsage(
+          context: context,
+          description: description as String,
+          examples: contextExamples,
+        ));
+      });
+
+      // Recoger ejemplos no utilizados para la acepción principal
+      if (workingExamples.isNotEmpty) {
+        for (final example in workingExamples) {
+          if (!usedExamples.contains(example)) {
+            remainingExamples.add(example);
+          }
+        }
+      }
+    } else if (workingExamples.isNotEmpty) {
+      // Si no hay usos contextuales, todos los ejemplos van a la acepción principal
+      remainingExamples.addAll(workingExamples);
+    }
+
+    // Crear la acepción principal
+    return [
+      VerbMeaning(
+        definition: oldMeaning,
+        partOfSpeech: 'verb', // Valor predeterminado para migración
+        examples: remainingExamples,
+        contextualUsages: contextualUsages,
+      )
+    ];
   }
 
   /// Convierte el modelo a un mapa para almacenar en la base de datos
   Map<String, dynamic> toDatabase() {
+    // Generar JSON para acepciones
+    final meaningsJson = json.encode(
+      meanings.map((meaning) => meaning.toJson()).toList()
+    );
+    
+    // Preparar campos retrocompatibles
+    String compatMeaning = '';
+    Map<String, String>? compatContextualUsage;
+    List<String>? compatExamples;
+    
+    if (meanings.isNotEmpty) {
+      // Usar la primera acepción para retrocompatibilidad
+      final firstMeaning = meanings.first;
+      compatMeaning = firstMeaning.definition;
+      
+      // Crear mapa de usos contextuales para retrocompatibilidad
+      if (firstMeaning.contextualUsages.isNotEmpty) {
+        compatContextualUsage = {
+          for (var usage in firstMeaning.contextualUsages)
+            usage.context: usage.description
+        };
+      }
+      
+      // Reunir todos los ejemplos para retrocompatibilidad
+      final allExamples = <String>[];
+      allExamples.addAll(firstMeaning.examples);
+      for (var usage in firstMeaning.contextualUsages) {
+        allExamples.addAll(usage.examples);
+      }
+      
+      if (allExamples.isNotEmpty) {
+        compatExamples = allExamples;
+      }
+    }
+
     return {
       DBConstants.colId: id,
       DBConstants.colBase: base,
@@ -122,12 +237,22 @@ class VerbModel {
       DBConstants.colPastUS: pastUS,
       DBConstants.colParticipleUK: participleUK,
       DBConstants.colParticipleUS: participleUS,
-      DBConstants.colMeaning: meaning,
       DBConstants.colPronunciationTextUS: pronunciationTextUS,
       DBConstants.colPronunciationTextUK: pronunciationTextUK,
-      DBConstants.colContextualUsage:
-          contextualUsage != null ? json.encode(contextualUsage) : null,
-      DBConstants.colExamples: examples != null ? json.encode(examples) : null,
+      
+      // Nuevo campo de acepciones
+      DBConstants.colMeanings: meaningsJson,
+      
+      // Campos de retrocompatibilidad
+      DBConstants.colMeaning: compatMeaning,
+      DBConstants.colContextualUsage: compatContextualUsage != null 
+          ? json.encode(compatContextualUsage) 
+          : null,
+      DBConstants.colExamples: compatExamples != null 
+          ? json.encode(compatExamples) 
+          : null,
+      
+      // Campo para búsqueda
       DBConstants.colSearchTerms: _generateSearchTerms(),
     };
   }
@@ -142,12 +267,23 @@ class VerbModel {
       if (pastUS.isNotEmpty) pastUS.toLowerCase(),
       if (participleUK.isNotEmpty) participleUK.toLowerCase(),
       if (participleUS.isNotEmpty) participleUS.toLowerCase(),
-      // También incluimos palabras clave del significado
-      ...meaning
+    };
+
+    // Añadir términos de las acepciones
+    for (final meaning in meanings) {
+      // Añadir la definición principal
+      terms.addAll(
+        meaning.definition
           .toLowerCase()
           .split(' ')
-          .where((word) => word.length > 2), // Eliminamos palabras muy cortas
-    };
+          .where((word) => word.length > 2) // Eliminar palabras cortas
+      );
+      
+      // Añadir los contextos
+      for (final usage in meaning.contextualUsages) {
+        terms.add(usage.context.toLowerCase());
+      }
+    }
 
     return terms.join(' ');
   }
@@ -162,11 +298,9 @@ class VerbModel {
     pastUS: pastUS,
     participleUK: participleUK,
     participleUS: participleUS,
-    meaning: meaning,
     pronunciationTextUS: pronunciationTextUS,
     pronunciationTextUK: pronunciationTextUK,
-    contextualUsage: contextualUsage,
-    examples: examples,
+    meanings: meanings,
   );
 
   /// Crea un VerbModel a partir de una entidad de dominio
@@ -180,11 +314,9 @@ class VerbModel {
       pastUS: verb.pastUS,
       participleUK: verb.participleUK,
       participleUS: verb.participleUS,
-      meaning: verb.meaning,
       pronunciationTextUS: verb.pronunciationTextUS,
       pronunciationTextUK: verb.pronunciationTextUK,
-      contextualUsage: verb.contextualUsage,
-      examples: verb.examples,
+      meanings: verb.meanings,
     );
   }
 
@@ -198,11 +330,9 @@ class VerbModel {
     String? pastUS,
     String? participleUK,
     String? participleUS,
-    String? meaning,
     String? pronunciationTextUS,
     String? pronunciationTextUK,
-    Map<String, String>? contextualUsage,
-    List<String>? examples,
+    List<VerbMeaning>? meanings,
   }) {
     return VerbModel(
       id: id ?? this.id,
@@ -213,11 +343,9 @@ class VerbModel {
       pastUS: pastUS ?? this.pastUS,
       participleUK: participleUK ?? this.participleUK,
       participleUS: participleUS ?? this.participleUS,
-      meaning: meaning ?? this.meaning,
       pronunciationTextUS: pronunciationTextUS ?? this.pronunciationTextUS,
       pronunciationTextUK: pronunciationTextUK ?? this.pronunciationTextUK,
-      contextualUsage: contextualUsage ?? this.contextualUsage,
-      examples: examples ?? this.examples,
+      meanings: meanings ?? this.meanings,
     );
   }
 }

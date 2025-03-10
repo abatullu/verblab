@@ -86,7 +86,7 @@ class VerbCard extends ConsumerWidget {
                   SizedBox(height: VerbLabTheme.spacing['md']),
 
                   // Significado (solo en modo expandido)
-                  if (verb.meaning.isNotEmpty)
+                  if (verb.meanings.isNotEmpty)
                     _buildMeaningContainer(theme, isDarkMode),
                 ],
               ],
@@ -210,6 +210,10 @@ class VerbCard extends ConsumerWidget {
 
   /// Construye el contenedor para el significado del verbo
   Widget _buildMeaningContainer(ThemeData theme, bool isDarkMode) {
+    // Obtener el primer significado para retrocompatibilidad
+    final firstDefinition =
+        verb.meanings.isNotEmpty ? verb.meanings.first.definition : "";
+
     return AnimatedContainer(
       duration: VerbLabTheme.quick,
       width: double.infinity,
@@ -232,7 +236,7 @@ class VerbCard extends ConsumerWidget {
           ),
           SizedBox(height: VerbLabTheme.spacing['xs']),
           Text(
-            verb.meaning,
+            firstDefinition,
             style: theme.textTheme.bodyMedium?.copyWith(
               height: 1.5,
               letterSpacing: 0.1,
