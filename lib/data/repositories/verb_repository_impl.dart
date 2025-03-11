@@ -1,5 +1,4 @@
 // lib/data/repositories/verb_repository_impl.dart
-import 'package:flutter/foundation.dart';
 import '../../core/error/failures.dart';
 import '../../domain/entities/verb.dart';
 import '../../domain/models/verb_meaning.dart';
