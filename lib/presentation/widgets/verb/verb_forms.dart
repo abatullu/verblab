@@ -140,10 +140,9 @@ class VerbForms extends ConsumerWidget {
     required bool isDarkMode,
   }) {
     final theme = Theme.of(context);
-    final verticalSpacing =
-        compact ? VerbLabTheme.spacing['xs']! : VerbLabTheme.spacing['sm']!;
-    final horizontalSpacing =
-        compact ? VerbLabTheme.spacing['xs']! : VerbLabTheme.spacing['sm']!;
+    // Estandarizado a 'md' para vertical y 'sm' para horizontal
+    final verticalSpacing = VerbLabTheme.spacing['md']!;
+    final horizontalSpacing = VerbLabTheme.spacing['sm']!;
 
     // Determinar color según el tense para ayudar en la diferenciación visual
     Color getLabelColor() {
@@ -167,8 +166,8 @@ class VerbForms extends ConsumerWidget {
 
     return Padding(
       padding: EdgeInsets.only(
-        top: isFirst ? 0 : verticalSpacing,
-        bottom: isLast ? 0 : verticalSpacing,
+        top: isFirst ? 0 : verticalSpacing / 2, // Reducido para mejor balance
+        bottom: isLast ? 0 : verticalSpacing / 2, // Reducido para mejor balance
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -210,16 +209,20 @@ class VerbForms extends ConsumerWidget {
                         ),
                   ),
                 ),
-                SizedBox(height: verticalSpacing),
-
+                SizedBox(
+                  height: VerbLabTheme.spacing['sm'],
+                ), // Estandarizado a 'sm'
                 // Valor de la forma verbal con mejor tipografía y espaciado
+                // Reducido a titleLarge en lugar de headlineMedium
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: horizontalSpacing),
                   child: AnimatedDefaultTextStyle(
                     duration: VerbLabTheme.quick,
                     style: (compact
                             ? theme.textTheme.titleMedium!
-                            : theme.textTheme.titleLarge!)
+                            : theme
+                                .textTheme
+                                .titleLarge!) // Reducido tamaño según guía
                         .copyWith(
                           fontWeight: FontWeight.w600,
                           letterSpacing: -0.3,
@@ -243,11 +246,11 @@ class VerbForms extends ConsumerWidget {
           // Espacio para separar el texto y el botón
           SizedBox(width: VerbLabTheme.spacing['xs']),
 
-          // Botón de pronunciación
+          // Botón de pronunciación - Reducido de 44px a 40px
           PronunciationButton(
             verbId: verb.id,
             tense: tense,
-            size: compact ? 36 : 44,
+            size: compact ? 36 : 40, // Reducido de 44 a 40
             withBackground: true,
             accentColor: labelColor,
           ),
@@ -259,7 +262,9 @@ class VerbForms extends ConsumerWidget {
   /// Construye un divisor entre formas verbales con mejor estilo
   Widget _buildDivider(ThemeData theme) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: VerbLabTheme.spacing['sm']!),
+      padding: EdgeInsets.symmetric(
+        vertical: VerbLabTheme.spacing['md']!,
+      ), // Estandarizado a 'md'
       child: Divider(
         height: 1,
         thickness: 1,
