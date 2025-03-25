@@ -2,21 +2,61 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart'; // Añadir este import
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'dart:io'; // Importar para Platform
 import 'core/constants/app_constants.dart';
 import 'core/providers/app_state_notifier.dart';
 import 'core/providers/user_preferences_provider.dart';
-import 'core/providers/monetization_providers.dart'; // Añadir este import
+import 'core/providers/monetization_providers.dart';
 import 'core/themes/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'presentation/widgets/common/error_view.dart';
+
+// Solo importar App Tracking Transparency en iOS
+import 'package:app_tracking_transparency/app_tracking_transparency.dart'
+    if (dart.library.html) 'package:verblab/core/utils/web_stub.dart';
 
 Future<void> _initializeApp() async {
   // Aseguramos que Flutter esté inicializado
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar AdMob
+  // Inicializar tracking para iOS
+  if (Platform.isIOS) {
+    try {
+      // Verificar el estado actual del tracking
+      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+      debugPrint('Current tracking status: $status');
+
+      // Solo solicitamos permiso si aún no se ha determinado
+      if (status == TrackingStatus.notDetermined) {
+        // Esperar un momento para mejorar la UX (permitir que la app se muestre primero)
+        await Future.delayed(const Duration(milliseconds: 600));
+
+        // Verificar si la app está en primer plano
+        if (WidgetsBinding.instance.lifecycleState !=
+            AppLifecycleState.detached) {
+          // Solicitar permiso
+          final newStatus =
+              await AppTrackingTransparency.requestTrackingAuthorization();
+          debugPrint('New tracking status after request: $newStatus');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error with tracking authorization: $e');
+      // Continuamos aunque haya error en tracking
+    }
+  }
+
+  // Inicializar AdMob con configuración adecuada
   try {
+    // Configuración para anuncios más adecuada
+    final RequestConfiguration config = RequestConfiguration(
+      tagForChildDirectedTreatment: TagForChildDirectedTreatment.unspecified,
+      tagForUnderAgeOfConsent: TagForUnderAgeOfConsent.unspecified,
+      maxAdContentRating: MaxAdContentRating.g,
+    );
+
+    await MobileAds.instance.updateRequestConfiguration(config);
     await MobileAds.instance.initialize();
     debugPrint('AdMob SDK initialized successfully');
   } catch (e) {
