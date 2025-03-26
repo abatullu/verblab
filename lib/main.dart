@@ -20,34 +20,55 @@ Future<void> _initializeApp() async {
   // Aseguramos que Flutter esté inicializado
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Inicializar tracking para iOS
+  // Inicialización específica de plataforma
   if (Platform.isIOS) {
-    try {
-      // Verificar el estado actual del tracking
-      final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      debugPrint('Current tracking status: $status');
-
-      // Solo solicitamos permiso si aún no se ha determinado
-      if (status == TrackingStatus.notDetermined) {
-        // Esperar un momento para mejorar la UX (permitir que la app se muestre primero)
-        await Future.delayed(const Duration(milliseconds: 600));
-
-        // Verificar si la app está en primer plano
-        if (WidgetsBinding.instance.lifecycleState !=
-            AppLifecycleState.detached) {
-          // Solicitar permiso
-          final newStatus =
-              await AppTrackingTransparency.requestTrackingAuthorization();
-          debugPrint('New tracking status after request: $newStatus');
-        }
-      }
-    } catch (e) {
-      debugPrint('Error with tracking authorization: $e');
-      // Continuamos aunque haya error en tracking
-    }
+    await _initializeIOS();
+  } else {
+    debugPrint('Initializing on Android platform');
   }
 
-  // Inicializar AdMob con configuración adecuada
+  // Inicializar AdMob después de la inicialización específica de plataforma
+  await _initializeAdMob();
+
+  // Configuramos la orientación preferida de la app
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+}
+
+// Inicialización específica para iOS (ATT)
+Future<void> _initializeIOS() async {
+  debugPrint('Starting iOS specific initialization...');
+  try {
+    // Verificar el estado actual del tracking
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    debugPrint('Current tracking status: $status');
+
+    // Solo solicitamos permiso si aún no se ha determinado
+    if (status == TrackingStatus.notDetermined) {
+      // Esperar un momento para mejorar la UX (permitir que la app se muestre primero)
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      // Verificar si la app está en primer plano
+      if (WidgetsBinding.instance.lifecycleState !=
+          AppLifecycleState.detached) {
+        // Solicitar permiso
+        final newStatus =
+            await AppTrackingTransparency.requestTrackingAuthorization();
+        debugPrint('New tracking status after request: $newStatus');
+      }
+    }
+    debugPrint('iOS initialization completed successfully');
+  } catch (e) {
+    debugPrint('Error with tracking authorization: $e');
+    // Continuamos aunque haya error en tracking
+  }
+}
+
+// Inicialización de AdMob
+Future<void> _initializeAdMob() async {
+  debugPrint('Starting AdMob initialization...');
   try {
     // Configuración para anuncios más adecuada
     final RequestConfiguration config = RequestConfiguration(
@@ -57,33 +78,39 @@ Future<void> _initializeApp() async {
     );
 
     await MobileAds.instance.updateRequestConfiguration(config);
-    await MobileAds.instance.initialize();
+    final initStatus = await MobileAds.instance.initialize();
+
+    // Log detallado del estado de inicialización
     debugPrint('AdMob SDK initialized successfully');
+    initStatus.adapterStatuses.forEach((adapter, status) {
+      debugPrint('Adapter status for $adapter: ${status.state}');
+    });
   } catch (e) {
     debugPrint('Error initializing AdMob: $e');
     // Continuamos ejecución aunque falle AdMob
   }
-
-  // Configuramos la orientación preferida de la app
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
 }
 
 void main() async {
-  await _initializeApp();
+  try {
+    debugPrint('Application starting...');
+    await _initializeApp();
+    debugPrint('App initialization completed');
 
-  // Configuramos el estilo de la barra de estado
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.light,
-    ),
-  );
+    // Configuramos el estilo de la barra de estado
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+      ),
+    );
 
-  runApp(const ProviderScope(child: VerbLabApp()));
+    runApp(const ProviderScope(child: VerbLabApp()));
+  } catch (e) {
+    debugPrint('Fatal error during app initialization: $e');
+    // Mostrar algún tipo de pantalla de error si es posible
+  }
 }
 
 /// Widget principal de la aplicación VerbLab
@@ -100,11 +127,21 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
     super.initState();
     // Inicializar datos al arrancar la app
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      debugPrint('Initializing app state and ad managers...');
       ref.read(appStateProvider.notifier).initialize();
 
-      // Inicializar y precargar anuncios
-      ref.read(adManagerProvider).initialize();
-      ref.read(adManagerProvider).loadBannerAd();
+      // Inicializar y precargar anuncios con un pequeño delay
+      // para evitar inicializaciones simultáneas
+      Future.delayed(const Duration(milliseconds: 500), () {
+        debugPrint('Initializing ad manager...');
+        ref.read(adManagerProvider).initialize();
+
+        // Pequeño delay adicional antes de cargar el primer anuncio
+        Future.delayed(const Duration(milliseconds: 300), () {
+          debugPrint('Loading initial banner ad...');
+          ref.read(adManagerProvider).loadBannerAd();
+        });
+      });
     });
   }
 
@@ -150,8 +187,18 @@ class _VerbLabAppState extends ConsumerState<VerbLabApp> {
               : Scaffold(
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 body: Center(
-                  child: CircularProgressIndicator(
-                    color: Theme.of(context).colorScheme.primary,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Initializing...',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
                   ),
                 ),
               ),
