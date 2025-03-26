@@ -1,7 +1,9 @@
 // lib/data/datasources/ads/ad_manager.dart
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'dart:async';
+import 'dart:io'; // Importado para usar Platform
 import '../../../core/error/failures.dart';
 
 class AdManager extends ChangeNotifier {
@@ -63,11 +65,35 @@ class AdManager extends ChangeNotifier {
     if (_isInitialized) return;
 
     try {
-      await MobileAds.instance.initialize();
+      // Pequeño delay antes de la inicialización para iOS
+      if (Platform.isIOS) {
+        debugPrint('iOS platform detected, adding initialization delay');
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      // Configuración para anuncios más adecuada
+      final RequestConfiguration config = RequestConfiguration(
+        tagForChildDirectedTreatment: TagForChildDirectedTreatment.unspecified,
+        tagForUnderAgeOfConsent: TagForUnderAgeOfConsent.unspecified,
+        maxAdContentRating: MaxAdContentRating.g,
+      );
+
+      debugPrint('Updating ad request configuration');
+      await MobileAds.instance.updateRequestConfiguration(config);
+
+      debugPrint('Initializing MobileAds');
+      final initStatus = await MobileAds.instance.initialize();
+
+      // Log detallado del estado de inicialización
+      debugPrint('AdMob SDK initialized successfully');
+      initStatus.adapterStatuses.forEach((adapter, status) {
+        debugPrint('Adapter status for $adapter: ${status.state}');
+      });
+
       _isInitialized = true;
-      debugPrint('AdMob initialized successfully');
       notifyListeners();
     } catch (e, stack) {
+      debugPrint('Error initializing AdMob: $e');
       final error = NetworkFailure(
         message: 'Failed to initialize AdMob',
         details: e.toString(),
@@ -103,6 +129,11 @@ class AdManager extends ChangeNotifier {
       final adUnitId = _getBannerAdUnitId('search');
       debugPrint('Loading banner ad with ID: $adUnitId');
 
+      // Pequeño delay antes de cargar el anuncio (especialmente útil en iOS)
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+
       _bannerAd = BannerAd(
         adUnitId: adUnitId,
         size: AdSize.banner,
@@ -118,8 +149,9 @@ class AdManager extends ChangeNotifier {
             debugPrint(
               'Banner ad failed to load: ${error.message}, code: ${error.code}',
             );
-            ad.dispose();
+            // No llamar a dispose() inmediatamente para evitar errores en iOS
             _bannerAd = null;
+            _isBannerAdLoaded = false;
             _retryLoadAd();
           },
           onAdClosed: (ad) {
@@ -130,8 +162,12 @@ class AdManager extends ChangeNotifier {
           },
         ),
       );
+
+      // Utilizar Future.delayed para evitar problemas en iOS
+      await Future.delayed(const Duration(milliseconds: 100));
       await _bannerAd!.load();
     } catch (e, stack) {
+      debugPrint('Error loading banner ad: $e');
       final error = NetworkFailure(
         message: 'Failed to load banner ad',
         details: e.toString(),
@@ -151,7 +187,10 @@ class AdManager extends ChangeNotifier {
         'Retrying banner ad load (attempt $_retryAttempt of $maxRetryAttempts)',
       );
 
-      Timer(retryDelay, () {
+      // Mayor delay para iOS
+      final delay = Platform.isIOS ? const Duration(seconds: 6) : retryDelay;
+
+      Timer(delay, () {
         _bannerAd = null;
         loadBannerAd();
       });
@@ -172,6 +211,11 @@ class AdManager extends ChangeNotifier {
       final adUnitId = _getBannerAdUnitId('detail');
       debugPrint('Loading detail page banner ad with ID: $adUnitId');
 
+      // Pequeño delay antes de cargar el anuncio (especialmente útil en iOS)
+      if (Platform.isIOS) {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+
       _detailPageBannerAd = BannerAd(
         adUnitId: adUnitId,
         size: AdSize.banner,
@@ -187,8 +231,9 @@ class AdManager extends ChangeNotifier {
             debugPrint(
               'Detail page banner ad failed to load: ${error.message}, code: ${error.code}',
             );
-            ad.dispose();
+            // No llamar a dispose() inmediatamente para evitar errores en iOS
             _detailPageBannerAd = null;
+            _isDetailPageBannerAdLoaded = false;
             _retryLoadDetailAd();
           },
           onAdClosed: (ad) {
@@ -200,8 +245,11 @@ class AdManager extends ChangeNotifier {
         ),
       );
 
+      // Utilizar Future.delayed para evitar problemas en iOS
+      await Future.delayed(const Duration(milliseconds: 100));
       await _detailPageBannerAd!.load();
     } catch (e, stack) {
+      debugPrint('Error loading detail page banner ad: $e');
       final error = NetworkFailure(
         message: 'Failed to load detail page banner ad',
         details: e.toString(),
@@ -222,7 +270,10 @@ class AdManager extends ChangeNotifier {
         'Retrying detail page banner ad load (attempt $_detailPageRetryAttempt of $maxRetryAttempts)',
       );
 
-      Timer(retryDelay, () {
+      // Mayor delay para iOS
+      final delay = Platform.isIOS ? const Duration(seconds: 6) : retryDelay;
+
+      Timer(delay, () {
         _detailPageBannerAd = null;
         loadDetailPageBannerAd();
       });
@@ -237,18 +288,38 @@ class AdManager extends ChangeNotifier {
   }
 
   void disposeBannerAd() {
-    _bannerAd?.dispose();
-    _bannerAd = null;
-    _isBannerAdLoaded = false;
-    notifyListeners();
+    // Usar Future.delayed para iOS para evitar problemas de sincronización
+    if (Platform.isIOS) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _bannerAd?.dispose();
+        _bannerAd = null;
+        _isBannerAdLoaded = false;
+        notifyListeners();
+      });
+    } else {
+      _bannerAd?.dispose();
+      _bannerAd = null;
+      _isBannerAdLoaded = false;
+      notifyListeners();
+    }
   }
 
   // Método para eliminar el banner de detalle
   void disposeDetailPageBannerAd() {
-    _detailPageBannerAd?.dispose();
-    _detailPageBannerAd = null;
-    _isDetailPageBannerAdLoaded = false;
-    notifyListeners();
+    // Usar Future.delayed para iOS para evitar problemas de sincronización
+    if (Platform.isIOS) {
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _detailPageBannerAd?.dispose();
+        _detailPageBannerAd = null;
+        _isDetailPageBannerAdLoaded = false;
+        notifyListeners();
+      });
+    } else {
+      _detailPageBannerAd?.dispose();
+      _detailPageBannerAd = null;
+      _isDetailPageBannerAdLoaded = false;
+      notifyListeners();
+    }
   }
 
   // Actualizar método dispose para limpiar ambos banners

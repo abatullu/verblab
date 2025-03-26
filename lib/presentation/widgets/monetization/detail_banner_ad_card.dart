@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:verblab/core/providers/user_preferences_provider.dart';
+import 'package:verblab/data/datasources/ads/ad_manager.dart';
 import '../../../core/providers/monetization_providers.dart';
 import '../../../core/themes/app_theme.dart';
 
@@ -18,10 +19,15 @@ class _DetailBannerAdCardState extends ConsumerState<DetailBannerAdCard>
   bool _isLoading = true;
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
+  // Guardar una referencia al AdManager al inicio
+  AdManager? _adManager;
 
   @override
   void initState() {
     super.initState();
+
+    // Guardar referencia al AdManager
+    _adManager = ref.read(adManagerProvider);
 
     // Configurar animación de fade-in
     _fadeController = AnimationController(
@@ -39,7 +45,10 @@ class _DetailBannerAdCardState extends ConsumerState<DetailBannerAdCard>
   }
 
   Future<void> _loadAd() async {
-    final adManager = ref.read(adManagerProvider);
+    // Usar la referencia guardada en lugar de leer del provider
+    final adManager = _adManager;
+    if (adManager == null) return;
+
     setState(() => _isLoading = true);
 
     try {
@@ -60,9 +69,14 @@ class _DetailBannerAdCardState extends ConsumerState<DetailBannerAdCard>
   void dispose() {
     _fadeController.dispose();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(adManagerProvider).disposeDetailPageBannerAd();
-    });
+    // Usar una referencia local para evitar acceder a ref
+    final adManager = _adManager;
+    if (adManager != null) {
+      // No usar WidgetsBinding.instance.addPostFrameCallback aquí
+      adManager.disposeDetailPageBannerAd();
+    }
+    // Liberar la referencia
+    _adManager = null;
 
     super.dispose();
   }
